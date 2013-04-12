@@ -35,6 +35,10 @@
 #include<string.h>
 #include<zlib.h>
 
+// There are 384 barcodes, so the maximum possible number of individuals per
+// experiment is 384. Each barcode is 8 bp.
+static const int maximum_barcodes = 384;
+
 int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*original_quality_array,long mapping_location,long expected_mapping_location,char*sequence_array,char*quality_array,int*is_base_mm_array);
 
 int main(int argc,char*argv[])
@@ -57,8 +61,8 @@ int main(int argc,char*argv[])
     fscanf(barcodekey,"%s %s",dummystr[0],dummystr[1]);
     fsetpos(barcodekey,&start_bcfile);
     bc_length=strlen(dummystr[1]); //barcode length
-    char sample_names[384][51];
-    char barcodes[384][bc_length+1]; //we have 384 barcodes, so the maximum possible number of individuals per experiment is 384; each barcode is 8 bp
+    char sample_names[maximum_barcodes][51];
+    char barcodes[maximum_barcodes][bc_length+1];
     int num_indivs;
     int i=0;
     while(fscanf(barcodekey,"%s %s",sample_names[i],barcodes[i])==2)
