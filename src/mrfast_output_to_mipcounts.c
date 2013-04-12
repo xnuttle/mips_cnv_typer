@@ -54,9 +54,10 @@ int main(int argc,char*argv[])
 		return 1;
 	}
 
-	//read in barcode key file and determine barcode length and the number of individuals in the experiment
+	// Read in barcode key file and determine barcode length and the number of
+    // individuals in the experiment.
     FILE*barcodekey;
-    char dummystr[2][51];
+    char dummystr[2][51]; // MAGIC
     fpos_t start_bcfile;
     int bc_length;
     barcodekey=fopen(*(argv+2),"r");
@@ -64,7 +65,7 @@ int main(int argc,char*argv[])
     fscanf(barcodekey,"%s %s",dummystr[0],dummystr[1]);
     fsetpos(barcodekey,&start_bcfile);
     bc_length=strlen(dummystr[1]); //barcode length
-    char sample_names[maximum_barcodes][51];
+    char sample_names[maximum_barcodes][51]; // MAGIC
     char barcodes[maximum_barcodes][bc_length+1];
     int num_indivs;
     int i=0;
@@ -79,8 +80,8 @@ int main(int argc,char*argv[])
 	long max_num_contigs=0,num_mip_targets=0;
 	FILE*miptargetsfile;
 	fpos_t pos;
-	char dummy[501];
-	char specstring[51];
+	char dummy[501]; // MAGIC
+	char specstring[51]; // MAGIC
 	miptargetsfile=fopen(*(argv+1),"r");
     fgetpos(miptargetsfile,&pos);
 	while(fscanf(miptargetsfile,"%s %s %s %s %s %s %s %s %s",dummy,dummy,dummy,dummy,dummy,dummy,specstring,dummy,dummy)==9)
@@ -96,9 +97,9 @@ int main(int argc,char*argv[])
 	//set up mip structure
 	struct mip
 	{
-		char master_target_name[51];
+		char master_target_name[51]; // MAGIC
 		long master_coordinate;
-		char contig_names[max_num_contigs][51];
+		char contig_names[max_num_contigs][51]; // MAGIC
 		long contig_start_coords[max_num_contigs];
 		char mip_type;
 		int important_bases[mip_length];
@@ -109,7 +110,7 @@ int main(int argc,char*argv[])
 	//set up structure containing information on mip hybridization counts to output
 	struct mip_hyb_counts
 	{
-		char individual[51];
+		char individual[51]; // MAGIC
 		long hyb_counts[num_mip_targets][max_num_contigs+1];
 	};
 
@@ -132,7 +133,7 @@ int main(int argc,char*argv[])
     }
 
 	//read in file containing information on mip target locations and store data in mip structure elements
-	char line[5001];
+	char line[5001]; // MAGIC
 	char ch;
 	int j,y,z;
 	long master_start,master_end,var_position;
@@ -255,7 +256,7 @@ int main(int argc,char*argv[])
 
 	//read in text file containing names of all gzipped mapping output files to input to program, and process each file one-by-one
 	FILE*textfile;
-	char input_file_name[51];
+	char input_file_name[51]; // MAGIC
 	char line2[5001];
     char mapped_orientation;
 	char barcode_read[bc_length+1];
@@ -490,7 +491,7 @@ int main(int argc,char*argv[])
 	}
 	//print output to file
 	FILE*out;
-	char output_base_name[51];
+	char output_base_name[51]; // MAGIC
 	char output_file_extension[11]=".mipcounts";
 	strncpy(output_base_name,*(argv+4),40);
 	strcat(output_base_name,output_file_extension);
