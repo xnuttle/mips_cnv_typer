@@ -1,31 +1,34 @@
-//Xander Nuttle
-//mrfast_output_to_mipcounts.c
-//Generates a file containing paralog-specific read counts for each MIP target for each individual in an experiment
-//Call: ./mrfast_output_to_mipcounts miptargets_file individual_barcode_key_file text_file_with_names_of_mapping_output_files output_file_base_name
-//Example call: ./mrfast_output_to_mipcounts SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt > pos_ctrl_expt.problemreads
-//(example call files in /net/gs/vol2/home/xnuttle/MIPs/experiments/pos_ctrl_expt/mrfast_mapping_output)
-//
-//This program takes in (1) a file containing information on MIP targets, (2) a file containing sample names and corresponding
-//reverse-complement barcode sequences, (3) a file with names of all gzipped mapping output SAM files from mrFAST, and (4) the 
-//desired base name of the output file and outputs (1) a file containing paralog-specific read counts for each MIP target for
-//each individual and (2) text printed to standard output showing reads possibly mismapped or reads mapped but with barcode
-//reads not perfectly matching any known barcode sequence.
-//
-//For each read pair, the program performs the following steps to assess mapping and increment the appropriate read count:
-//	-determine if mapping location corresponds to a valid MIP target (if not, go to next read pair)
-//	-determine if insert size calculated from mapping is concordant with expectation from MIP design (if not, go to next read pair)
-//	-ensure base quality is >= Phred 30 at all bases mapped to sites having variation between paralogs in contig target sequences (if not, go to next read pair)
-//	-ensure no mismatches at bases mapped to fixed SUN sites (if not, print read pair to standard output and go to next read pair)
-//	-determine paralog-specificity for MIP target the read pair mapped to
-//	-determine the individual from which the read pair came (if no perfect match between barcode read and known barcode, print to standard output and go to next read pair)
-//	-increment the appropriate individual-MIP_target-paralog read count
-//
-//After all mapped read pairs have been processed, the program prints the counts to an output file having the base name
-//specified by the user via the final command line argument and the extension ".mipcounts".
-//
-//THIS PROGRAM DOES NOT ANALYZE SEQUENCE CONTENT!!!
-//
-//This program should be run from the directory containing mrfast output files (gzipped sam files), i.e. a "mrfast_mapping_output" directory
+/*
+ * Xander Nuttle
+ *
+ * mrfast_output_to_mipcounts.c
+ *
+ * Generates a file containing paralog-specific read counts for each MIP target for each individual in an experiment
+ * Call: ./mrfast_output_to_mipcounts miptargets_file individual_barcode_key_file text_file_with_names_of_mapping_output_files output_file_base_name
+ * Example call: ./mrfast_output_to_mipcounts SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt > pos_ctrl_expt.problemreads
+ * (example call files in /net/gs/vol2/home/xnuttle/MIPs/experiments/pos_ctrl_expt/mrfast_mapping_output)
+ * This program takes in (1) a file containing information on MIP targets, (2) a file containing sample names and corresponding
+ * reverse-complement barcode sequences, (3) a file with names of all gzipped mapping output SAM files from mrFAST, and (4) the
+ * desired base name of the output file and outputs (1) a file containing paralog-specific read counts for each MIP target for
+ * each individual and (2) text printed to standard output showing reads possibly mismapped or reads mapped but with barcode
+ * reads not perfectly matching any known barcode sequence.
+ *
+ * For each read pair, the program performs the following steps to assess mapping and increment the appropriate read count:
+ * 	-determine if mapping location corresponds to a valid MIP target (if not, go to next read pair)
+ * 	-determine if insert size calculated from mapping is concordant with expectation from MIP design (if not, go to next read pair)
+ * 	-ensure base quality is >= Phred 30 at all bases mapped to sites having variation between paralogs in contig target sequences (if not, go to next read pair)
+ * 	-ensure no mismatches at bases mapped to fixed SUN sites (if not, print read pair to standard output and go to next read pair)
+ * 	-determine paralog-specificity for MIP target the read pair mapped to
+ * 	-determine the individual from which the read pair came (if no perfect match between barcode read and known barcode, print to standard output and go to next read pair)
+ * 	-increment the appropriate individual-MIP_target-paralog read count
+ *
+ * After all mapped read pairs have been processed, the program prints the counts to an output file having the base name
+ * specified by the user via the final command line argument and the extension ".mipcounts".
+ *
+ * THIS PROGRAM DOES NOT ANALYZE SEQUENCE CONTENT!!!
+ *
+ * This program should be run from the directory containing mrfast output files (gzipped sam files), i.e. a "mrfast_mapping_output" directory
+ */
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -47,7 +50,7 @@ int main(int argc,char*argv[])
 		system("head -28 /net/gs/vol2/home/xnuttle/MIPs/analysis_programs/mrfast_output_to_mipcounts.c");
 		return 1;
 	}
-	
+
 	//read in barcode key file and determine barcode length and the number of individuals in the experiment
   FILE*barcodekey;
   char dummystr[2][51];
@@ -74,7 +77,7 @@ int main(int argc,char*argv[])
 	FILE*miptargetsfile;
 	fpos_t pos;
 	char dummy[501];
-	char specstring[51];	
+	char specstring[51];
 	miptargetsfile=fopen(*(argv+1),"r");
   fgetpos(miptargetsfile,&pos);
 	while(fscanf(miptargetsfile,"%s %s %s %s %s %s %s %s %s",dummy,dummy,dummy,dummy,dummy,dummy,specstring,dummy,dummy)==9)
@@ -84,9 +87,9 @@ int main(int argc,char*argv[])
 		{
 			max_num_contigs=strlen(specstring);
 		}
-	}	
+	}
 	fsetpos(miptargetsfile,&pos);
-	
+
 	//set up mip structure
 	struct mip
 	{
@@ -124,7 +127,7 @@ int main(int argc,char*argv[])
     printf("Memory allocation for count information failed!\n");
     return 1;
   }
-	
+
 	//read in file containing information on mip target locations and store data in mip structure elements
 	char line[5001];
 	char ch;
@@ -376,14 +379,14 @@ int main(int argc,char*argv[])
 					sum++;
 				}
 			}
-			if(sum>=20) 
+			if(sum>=20)
 			//mip target sequence clearly has indel; 20+ paralog-variant bases are due to the fact that aligned sequences were not used to determine these
 			//assumption of no indels may be violated for exon-targeting or single-SUN targeting MIPs which were designed blind to the alignment between paralogs
 			{
 				has_indel=1;
 				if((target_size<(152-indel_insert_wiggle_room))||(target_size>(152+indel_insert_wiggle_room)))
 				{
-					continue; //insert size of mapped reads is outside of expected range for a MIP target 
+					continue; //insert size of mapped reads is outside of expected range for a MIP target
 				}
 			}
 			else //low number of paralog-variant bases suggests an indel within mip target sequence is not likely
@@ -406,7 +409,7 @@ int main(int argc,char*argv[])
 			int inconsistent_reads=0;
 			inconsistent_reads+=parse_cigar_and_md(cigar,md,read1seq,original_quality,mapping_loc,mips[mapped_mip].contig_start_coords[contig_num],sequence,quality,is_base_mm);
 			inconsistent_reads+=parse_cigar_and_md(cigar2,md2,read2seq,original_quality2,mapping_loc2,mips[mapped_mip].contig_start_coords[contig_num],sequence,quality,is_base_mm);
-			
+
 			if(inconsistent_reads)
 			{
 				continue;	//forward and reverse reads had different base calls for the same base
@@ -470,7 +473,7 @@ int main(int argc,char*argv[])
 				printf("Good mapping but imperfectly matching barcode read for read pair:\n%s\n%s\n",line,line2);
 				continue; //barcode read did not perfectly match any known barcode
 			}
-			//determine if paralog mapped to can be distinguished (has specificity) or not and increment appropriate count	
+			//determine if paralog mapped to can be distinguished (has specificity) or not and increment appropriate count
 			if(mips[mapped_mip].specificity[contig_num]==1) //mapping has specificity
 			{
 				(individual_counts[indiv].hyb_counts[mapped_mip][contig_num])++;
@@ -488,7 +491,7 @@ int main(int argc,char*argv[])
 	char output_file_extension[11]=".mipcounts";
 	strncpy(output_base_name,*(argv+4),40);
 	strcat(output_base_name,output_file_extension);
-	out=fopen(output_base_name,"w");	
+	out=fopen(output_base_name,"w");
 	fprintf(out,"Individual\tTarget_Sequence\tTarget_Coordinate\tMip_Type\t");
 	for(k=0;k<max_num_contigs;k++)
 	{
@@ -507,7 +510,7 @@ int main(int argc,char*argv[])
 			fprintf(out,"%ld\n",individual_counts[i].hyb_counts[j][max_num_contigs]);
 		}
 	}
-	
+
 	//clean up and exit
 	free(mips);
 	free(individual_counts);
@@ -581,7 +584,7 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
       			md_offset+=strlen(dummy);
       			ch=md_string[md_offset];
 						k=-1; //since k is incremented at the end of the loop and we want new k=0
-					}	
+					}
 				}
 				if((quality_array[index]=='!')&&(index>=0)&&(index<152))
 				{
@@ -632,7 +635,7 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 				}
 				index++; //increment final index only
 			}
-		}		
+		}
 	}
 	return inconsistency;
 }
