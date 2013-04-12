@@ -1,5 +1,5 @@
 
-PROGRAMS = mrfast_output_to_mipcounts #call_mip_srgap2_cn detail_mip_targets
+PROGRAMS = mrfast_output_to_mipcounts detail_mip_targets #call_mip_srgap2_cn
 BINARIES = $(addprefix bin/,$(PROGRAMS))
 
 CC = gcc
