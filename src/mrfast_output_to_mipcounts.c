@@ -514,20 +514,40 @@ int main(int argc,char*argv[])
 	return 0;
 }
 
-//function to parse through CIGAR string and MD tag corresponding to a single read
-//inputs: pointer to cigar string, pointer to md string, pointer to array of read quality scores, mapping location, expected mapping location, pointer to array of final (aligned to contig reference) quality scores,
-//pointer to array of integers indicating whether a particular base is mismatched
-//output: no output, but the values of the final quality array and mismatched bases array are altered appropriately
-
-//the algorithm to parse CIGAR string is fairly straightforward:
-//	first array index = mapping location - theoretical mapping location
-//	for mapped bases (M), set array value to corresponding mapped base quality and increment base quality and array index
-//	for inserted bases relative to reference, increment base quality (skip over base quality, moving to value at next read base) without changing array index
-//	for deleted bases relative to reference, increment array index without changing base quality position
-//the algorithm to parse MD tag involves getting the number of matches, getting the next character in the string (either A, C, G, T, or ^), and performing
-//the next action accordingly; it has been shown to work on a wide spectrum of test cases
-//the CIGAR string and MD tag must be parsed simultaneously because they inform each other's interpretation, see http://davetang.org/muse/2011/01/28/perl-and-sam/
-
+/*
+ * Parse a CIGAR string and MD tag corresponding to a single read.
+ *
+ * Inputs: pointer to cigar string, pointer to md string, pointer to array of
+ * read quality scores, mapping location, expected mapping location, pointer to
+ * array of final (aligned to contig reference) quality scores, pointer to array
+ * of integers indicating whether a particular base is mismatched
+ *
+ * Output: no output, but the values of the final quality array and mismatched
+ * bases array are altered appropriately
+ *
+ * The algorithm to parse CIGAR string is fairly straightforward:
+ *
+ *	1. first array index = mapping location - theoretical mapping location
+ *
+ *	2. for mapped bases (M), set array value to corresponding mapped base
+ *	quality and increment base quality and array index
+ *
+ *	3. for inserted bases relative to reference, increment base quality (skip
+ *	over base quality, moving to value at next read base) without changing array
+ *	index
+ *
+ *	4. for deleted bases relative to reference, increment array index without
+ *	changing base quality position
+ *
+ * The algorithm to parse MD tag involves getting the number of matches, getting
+ * the next character in the string (either A, C, G, T, or ^), and performing
+ * the next action accordingly; it has been shown to work on a wide spectrum of
+ * test cases
+ *
+ * The CIGAR string and MD tag must be parsed simultaneously because they inform
+ * each other's interpretation, see
+ * http://davetang.org/muse/2011/01/28/perl-and-sam/
+ */
 int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*original_quality_array,long mapping_location,long expected_mapping_location,char*sequence_array,char*quality_array,int*is_base_mm_array)
 {
 	long index=mapping_location-expected_mapping_location; //starting index of final quality array and mismatch array
