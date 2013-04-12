@@ -46,6 +46,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include <ctype.h>
 #include<string.h>
 
 int main(int argc,char*argv[])
@@ -250,7 +251,7 @@ int main(int argc,char*argv[])
 		fclose(exons_file);
 
 		//process mip target information for mips targeting that specific gene family
-		long master_start,master_end,contig_start;
+		long master_start,master_end;
 		int targets_sun,targets_exon;
 		int first_contig_seq;
 		int has_variation_between_paralogs;
