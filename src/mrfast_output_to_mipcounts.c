@@ -39,6 +39,9 @@
 // experiment is 384. Each barcode is 8 bp.
 static const int maximum_barcodes = 384;
 
+// MIPs are expected to be this many bases long.
+static const int mip_length = 152;
+
 int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*original_quality_array,long mapping_location,long expected_mapping_location,char*sequence_array,char*quality_array,int*is_base_mm_array);
 
 int main(int argc,char*argv[])
@@ -98,7 +101,7 @@ int main(int argc,char*argv[])
 		char contig_names[max_num_contigs][51];
 		long contig_start_coords[max_num_contigs];
 		char mip_type;
-		int important_bases[152];
+		int important_bases[mip_length];
 		int specificity[max_num_contigs];
 		char orientation;
 	};
@@ -180,7 +183,7 @@ int main(int argc,char*argv[])
 		ch=getc(miptargetsfile);
 		//get 5th and 6th fields - local variant base and fixed SUN locations - and store in mip structure in a 152-mer sequence of 0s,1s, and numbers >1
 		//0=base invariant at this position,1=some variation between paralogs at this position but not a fixed SUN,2+=fixed SUN at this position
-		for(z=0;z<152;z++)
+		for(z=0;z<mip_length;z++)
 		{
 			mips[j].important_bases[z]=0;
 		}
@@ -259,9 +262,9 @@ int main(int argc,char*argv[])
     char mapped_contig[18];
     long mapping_loc,mapping_loc2;
     long target_size;
-    char quality[152],original_quality[76],original_quality2[76];
-	char sequence[152],read1seq[76],read2seq[76];
-    int is_base_mm[152];
+    char quality[mip_length],original_quality[76],original_quality2[76];
+	char sequence[mip_length],read1seq[76],read2seq[76];
+    int is_base_mm[mip_length];
     char cigar[301],cigar2[301];
     char md[301],md2[301];
     char*tab_locations1[12];
@@ -372,7 +375,7 @@ int main(int argc,char*argv[])
 			int strict_insert_wiggle_room=2,indel_insert_wiggle_room=10; //insert_wiggle_room = number of bp mapped insert size can differ from expected insert size
 			int sum=0;
 			int has_indel=0;
-			for(k=0;k<152;k++)
+			for(k=0;k<mip_length;k++)
 			{
 				if(mips[mapped_mip].important_bases[k]>0)
 				{
@@ -384,14 +387,14 @@ int main(int argc,char*argv[])
 			//assumption of no indels may be violated for exon-targeting or single-SUN targeting MIPs which were designed blind to the alignment between paralogs
 			{
 				has_indel=1;
-				if((target_size<(152-indel_insert_wiggle_room))||(target_size>(152+indel_insert_wiggle_room)))
+				if((target_size<(mip_length-indel_insert_wiggle_room))||(target_size>(mip_length+indel_insert_wiggle_room)))
 				{
 					continue; //insert size of mapped reads is outside of expected range for a MIP target
 				}
 			}
 			else //low number of paralog-variant bases suggests an indel within mip target sequence is not likely
 			{
-				if((target_size<(152-strict_insert_wiggle_room))||(target_size>(152+strict_insert_wiggle_room)))
+				if((target_size<(mip_length-strict_insert_wiggle_room))||(target_size>(mip_length+strict_insert_wiggle_room)))
                 {
                     continue; //insert size of mapped reads is outside of expected range for a MIP target
                 }
@@ -399,7 +402,7 @@ int main(int argc,char*argv[])
 
 			//initialize array of quality values to store quality scores of read bases corresponding to reference bases 1-152 of MIP target sequence
 			//also initialize array of 0s and 1s specifying if a base mapped to a particular reference position is mismatched and a sequence array
-			for(i=0;i<152;i++)
+			for(i=0;i<mip_length;i++)
 			{
 				sequence[i]='N';
 				quality[i]='!'; //these correspond to contig reference bases 1-152, ! is lower than the lowest actual quality possible, #
@@ -416,7 +419,7 @@ int main(int argc,char*argv[])
 			}
 
 			int passed_quality=1;
-			for(k=0;k<152;k++) //look at quality scores of paralog-variant bases to ensure high quality scores (> Phred 30) at these bases
+			for(k=0;k<mip_length;k++) //look at quality scores of paralog-variant bases to ensure high quality scores (> Phred 30) at these bases
 			{
 				if(mips[mapped_mip].important_bases[k]>0)
 				{
@@ -430,7 +433,7 @@ int main(int argc,char*argv[])
 			if(has_indel) //if there are indel differences between paralogs, ensure the read has an average base quality > Phred 30
 			{
 				passed_quality=1;
-				for(k=0;k<152;k++)
+				for(k=0;k<mip_length;k++)
 				{
 					sum+=quality[k];
 				}
@@ -445,7 +448,7 @@ int main(int argc,char*argv[])
 				continue; //quality score at a paralog-variant base was < Phred 30
 			}
 			int mismatch_at_sun=0;
-			for(k=0;k<152;k++)
+			for(k=0;k<mip_length;k++)
 			{
 				if((mips[mapped_mip].important_bases[k]*is_base_mm[k])>1)
 				{
@@ -590,7 +593,7 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 					if(isalpha(ch))
 					{
 						md_offset++;
-						if((index>=0)&&(index<152))
+						if((index>=0)&&(index<mip_length))
 						{
 							is_base_mm_array[index]=1;
 							if((sequence_array[index]!='N')&&(sequence_array[index]!=read_sequence[read_index])) //if analyzing 2nd read and 1st read base does not match 2nd read base
@@ -606,12 +609,12 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 						k=-1; //since k is incremented at the end of the loop and we want new k=0
 					}
 				}
-				if((quality_array[index]=='!')&&(index>=0)&&(index<152))
+				if((quality_array[index]=='!')&&(index>=0)&&(index<mip_length))
 				{
 					quality_array[index]=original_quality_array[read_index];
 					sequence_array[index]=read_sequence[read_index];
 				}
-				else if((index>=0)&&(index<152)) //there is some overlap between 1st read and 2nd read due to deletion(s); take the highest quality if there is agreement on the base call
+				else if((index>=0)&&(index<mip_length)) //there is some overlap between 1st read and 2nd read due to deletion(s); take the highest quality if there is agreement on the base call
 				{
 					if(sequence_array[index]==read_sequence[read_index])
 					{
@@ -640,7 +643,7 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 			md_offset+=(num_bases+1); //the '+1' is for the '^' character
 			for(j=0;j<num_bases;j++)
 			{
-				if((quality_array[index]=='!')&&(index>=0)&&(index<152))
+				if((quality_array[index]=='!')&&(index>=0)&&(index<mip_length))
 				{
 					is_base_mm_array[index]=1;
 					sequence_array[index]='-';
@@ -649,7 +652,7 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 						quality_array[index]=(original_quality_array[read_index-1]+original_quality_array[read_index])/2; //quality values for 'deleted' base positions should be the average of the flanking quality values in the read
 					}
 				}
-				else if((index>=0)&&(index<152)&&(read_index>=1)&&(read_index<76))
+				else if((index>=0)&&(index<mip_length)&&(read_index>=1)&&(read_index<76))
 				{
 					quality_array[index]=(quality_array[index]>((original_quality_array[read_index-1]+original_quality_array[read_index])/2))?quality_array[index]:(original_quality_array[read_index-1]+original_quality_array[read_index])/2;
 				}
