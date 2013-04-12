@@ -34,8 +34,6 @@
 #include<stdlib.h>
 #include<string.h>
 #include<zlib.h>
-#define KYEL "\x1B[33m"
-#define KRED "\x1B[31m"
 
 int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*original_quality_array,long mapping_location,long expected_mapping_location,char*sequence_array,char*quality_array,int*is_base_mm_array);
 
