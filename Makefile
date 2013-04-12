@@ -8,5 +8,10 @@ CFLAGS = -Wall -lz
 
 all : $(BINARIES)
 
+.PHONY : clean
+
 bin/% : src/%.c
 	$(CC) $(CFLAGS) $^ -o $@
+
+clean :
+	rm -f $(BINARIES)
