@@ -32,6 +32,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include <ctype.h>
 #include<string.h>
 #include<zlib.h>
 
@@ -236,7 +237,7 @@ int main(int argc,char*argv[])
 		}
 		mips[j].orientation=getc(miptargetsfile);
 		//ignore 9th field - number of bases in 1st MIP arm
-		while(ch=getc(miptargetsfile)!='\n')
+		while((ch=getc(miptargetsfile))!='\n')
 			continue;
 	}
 	fclose(miptargetsfile);
@@ -582,7 +583,7 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 			{
 				k=0;
 				num_matches=strtol(md_string+md_offset,NULL,10); //determine how many mapped bases are matches from the MD string
-				sprintf(dummy,"%ld\0",num_matches);
+				sprintf(dummy,"%ld",num_matches);
                 md_offset+=strlen(dummy);
                 ch=md_string[md_offset]; //using MD string, determine whether first base after last matching base is a substitution (A,C,G,T) or 'deleted' (^) compared to the reference
 			}
@@ -604,7 +605,7 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 							sequence_array[index]=read_sequence[read_index];
 						}
 						num_matches=strtol(md_string+md_offset,NULL,10);
-                        sprintf(dummy,"%ld\0",num_matches);
+                        sprintf(dummy,"%ld",num_matches);
                         md_offset+=strlen(dummy);
                         ch=md_string[md_offset];
 						k=-1; //since k is incremented at the end of the loop and we want new k=0
