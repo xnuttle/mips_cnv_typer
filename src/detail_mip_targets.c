@@ -11,7 +11,7 @@
 // targeted gene family's master sequence (this file can be easily created from information in the MIP design Excel file); MIPs in this file should be
 // sorted by the gene family they target
 // -a series of at least two integers, the first being the number of gene families targeted and the rest corresponding to numbers of contig sequences
-// in each targeted gene family 
+// in each targeted gene family
 // -fasta files containing each gene family's master sequence (if there are multiple targeted gene families, the order of fasta files should match the
 // order of integers specifying the number of contigs in each gene family)
 // -for each gene family targeted, fasta files containing contig sequences, a fixed SUNs file, and a bed file specifying exon coordinates (base 1)
@@ -29,7 +29,7 @@
 //  4-MIP type (S=SUN-targeting, E=exon-targeting, B=both)
 //  5-string of locations of paralog-specificity-conferring variation (all such variation seen in aligned sequences) with respect to targeted sequence plus arms
 //  	(loc1,loc2,loc3,); this will be used to flag such bases for base call quality assessment; the range of locations is 1-152 becaue targeted sequence plus arms is 152 bp
-//  6-same as field 5, except only containing locations of fixed SUNs with respect to targeted sequence plus arms; this will be used to flag such bases for 
+//  6-same as field 5, except only containing locations of fixed SUNs with respect to targeted sequence plus arms; this will be used to flag such bases for
 //  	assessment of mismatches at those locations
 //  7-string of ones and zeros having length equal to the number of contigs corresponding to the targeted master sequence, with a "1" indicating the
 //    corresponding targeted contig sequence is distinguishable from other contig sequences and a "0" indicating the opposite (1010); this example means paralogs
@@ -80,7 +80,7 @@ int main(int argc,char*argv[])
 		char fixed_sun_locs[301];
 		char specificity[max_num_contigs+1];
 		int first_arm_length;
-	};	
+	};
 
 	//get names of master sequences
 	char master_sequence_names[num_gene_families][51];
@@ -100,7 +100,7 @@ int main(int argc,char*argv[])
 			}
 		}
 		master_sequence_names[i][j]='\0';
-	}	
+	}
 
 
 	//read in information about mip arm location and calculate total number of mips and number of mips targeting each family
@@ -165,7 +165,7 @@ int main(int argc,char*argv[])
 		}
 		master_sequence[k]='\0';
 		fclose(master_sequence_files[i]);
-		
+
 		//input contig sequences
 		num_prev_gene_family_files=0;
 		for(j=0;j<i;j++)
@@ -271,10 +271,10 @@ int main(int argc,char*argv[])
 			targets_sun=0;
 			targets_exon=0;
 			fscanf(mip_arm_locations_file,"%s %ld %ld %ld %ld",master_sequence_target,&ext_start,&ext_end,&lig_start,&lig_end);
-			
+
 			//store information on target sequence
 			strncpy(mip_targets[m].target_sequence,master_sequence_target,50);
-			
+
 			//calculate master sequence start and end coordinates of target sequence, mip orientation, and length of first hybridization arm
 			if(ext_start<lig_start)
 			{
@@ -291,7 +291,7 @@ int main(int argc,char*argv[])
 				mip_targets[m].first_arm_length=lig_end-lig_start+1;
 			}
 			sprintf(mip_targets[m].master_loc,"%ld,%ld",master_start,master_end);
-			
+
 			//calculate local coordinates within 152 bp target of any fixed SUNs and determine whether or not target contains any fixed suns
 			for(k=0;k<num_fixed_suns;k++)
 			{
@@ -412,7 +412,7 @@ int main(int argc,char*argv[])
 			m++;
 		}
 	}
-	
+
 	//print information on each mip target to output file
 	FILE*out;
 	char extension[12]=".miptargets";
