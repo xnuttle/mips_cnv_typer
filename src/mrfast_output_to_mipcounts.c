@@ -41,13 +41,11 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 
 int main(int argc,char*argv[])
 {
-	//check to make sure there are there are enough command line arguments provided
-	if(argc<5) //the program call counts as the 1st command line argument; thus, with 4 necessary inputs, argc must be >= 5
+	// Check to make sure there are there are enough command line arguments provided.
+	if(argc<5)
 	{
-		printf(KRED "ERROR due to improper input!!! The program call should take the following format:\n");
-		printf(KYEL "PATH_TO_PROGRAM/mrfast_output_to_mipcounts miptargets_file individual_barcode_key_file text_file_with_names_of_mapping_output_files output_file_base_name\n");
-		printf(KYEL "\nProgram Help:\n\n");
-		system("head -28 /net/gs/vol2/home/xnuttle/MIPs/analysis_programs/mrfast_output_to_mipcounts.c");
+		printf("Usage: %s <miptargets_file> <individual_barcode_key_file> <text_file_with_names_of_mapping_output_files> <output_file_base_name>\n\n", argv[0]);
+        printf("Example call: %s SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt > pos_ctrl_expt.problemreads\n", argv[0]);
 		return 1;
 	}
 
