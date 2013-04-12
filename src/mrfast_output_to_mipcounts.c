@@ -41,32 +41,32 @@ int main(int argc,char*argv[])
 {
 	// Check to make sure there are there are enough command line arguments provided.
 	if(argc<5)
-	{
+    {
 		printf("Usage: %s <miptargets_file> <individual_barcode_key_file> <text_file_with_names_of_mapping_output_files> <output_file_base_name>\n\n", argv[0]);
         printf("Example call: %s SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt > pos_ctrl_expt.problemreads\n", argv[0]);
 		return 1;
 	}
 
 	//read in barcode key file and determine barcode length and the number of individuals in the experiment
-  FILE*barcodekey;
-  char dummystr[2][51];
-  fpos_t start_bcfile;
-  int bc_length;
-  barcodekey=fopen(*(argv+2),"r");
-  fgetpos(barcodekey,&start_bcfile);
-  fscanf(barcodekey,"%s %s",dummystr[0],dummystr[1]);
-  fsetpos(barcodekey,&start_bcfile);
-  bc_length=strlen(dummystr[1]); //barcode length
-  char sample_names[384][51];
-  char barcodes[384][bc_length+1]; //we have 384 barcodes, so the maximum possible number of individuals per experiment is 384; each barcode is 8 bp
-  int num_indivs;
-  int i=0;
-  while(fscanf(barcodekey,"%s %s",sample_names[i],barcodes[i])==2)
-  {
-    i++;
-  }
-  num_indivs=i;
-  fclose(barcodekey);
+    FILE*barcodekey;
+    char dummystr[2][51];
+    fpos_t start_bcfile;
+    int bc_length;
+    barcodekey=fopen(*(argv+2),"r");
+    fgetpos(barcodekey,&start_bcfile);
+    fscanf(barcodekey,"%s %s",dummystr[0],dummystr[1]);
+    fsetpos(barcodekey,&start_bcfile);
+    bc_length=strlen(dummystr[1]); //barcode length
+    char sample_names[384][51];
+    char barcodes[384][bc_length+1]; //we have 384 barcodes, so the maximum possible number of individuals per experiment is 384; each barcode is 8 bp
+    int num_indivs;
+    int i=0;
+    while(fscanf(barcodekey,"%s %s",sample_names[i],barcodes[i])==2)
+    {
+        i++;
+    }
+    num_indivs=i;
+    fclose(barcodekey);
 
 	//get information about number of mip targets and maximum number of contigs per family
 	long max_num_contigs=0,num_mip_targets=0;
@@ -75,9 +75,9 @@ int main(int argc,char*argv[])
 	char dummy[501];
 	char specstring[51];
 	miptargetsfile=fopen(*(argv+1),"r");
-  fgetpos(miptargetsfile,&pos);
+    fgetpos(miptargetsfile,&pos);
 	while(fscanf(miptargetsfile,"%s %s %s %s %s %s %s %s %s",dummy,dummy,dummy,dummy,dummy,dummy,specstring,dummy,dummy)==9)
-  {
+    {
 		num_mip_targets++;
 		if(strlen(specstring)>max_num_contigs)
 		{
@@ -119,10 +119,10 @@ int main(int argc,char*argv[])
 	struct mip_hyb_counts*individual_counts;
 	individual_counts=(struct mip_hyb_counts*)malloc(num_indivs*sizeof(struct mip_hyb_counts));
 	if(individual_counts==NULL)
-  {
-    printf("Memory allocation for count information failed!\n");
-    return 1;
-  }
+    {
+        printf("Memory allocation for count information failed!\n");
+        return 1;
+    }
 
 	//read in file containing information on mip target locations and store data in mip structure elements
 	char line[5001];
@@ -197,21 +197,21 @@ int main(int argc,char*argv[])
 			}
 		}
 		while((ch=getc(miptargetsfile))!='\t')
-    {
-      z=0;
-      while(ch!=',')
-      {
-        line[z]=ch;
-        z++;
-        ch=getc(miptargetsfile);
-      }
-      line[z]='\0';
-      var_position=strtol(line,NULL,10);
-      if(var_position!=0)
+        {
+            z=0;
+            while(ch!=',')
+            {
+                line[z]=ch;
+                z++;
+                ch=getc(miptargetsfile);
+            }
+            line[z]='\0';
+            var_position=strtol(line,NULL,10);
+            if(var_position!=0)
 			{
 				mips[j].important_bases[var_position-1]++;
 			}
-    }
+        }
 		//get 7th and 8th fields - specificity and orientation - and store in mip structure
 		for(z=0;z<max_num_contigs;z++)
 		{
@@ -250,21 +250,21 @@ int main(int argc,char*argv[])
 	FILE*textfile;
 	char input_file_name[51];
 	char line2[5001];
-  char mapped_orientation;
+    char mapped_orientation;
 	char barcode_read[bc_length+1];
-  char mapped_contig[18];
-  long mapping_loc,mapping_loc2;
-  long target_size;
-  char quality[152],original_quality[76],original_quality2[76];
+    char mapped_contig[18];
+    long mapping_loc,mapping_loc2;
+    long target_size;
+    char quality[152],original_quality[76],original_quality2[76];
 	char sequence[152],read1seq[76],read2seq[76];
-  int is_base_mm[152];
-  char cigar[301],cigar2[301];
-  char md[301],md2[301];
-  char*tab_locations1[12];
-  char*tab_locations2[12];
+    int is_base_mm[152];
+    char cigar[301],cigar2[301];
+    char md[301],md2[301];
+    char*tab_locations1[12];
+    char*tab_locations2[12];
 	textfile=fopen(*(argv+3),"r");
 	while(fscanf(textfile,"%s",input_file_name)==1)
-	{
+    {
 		//process gzipped file containing mapped reads
 		gzFile*in;
 		in=gzopen(input_file_name,"r");
@@ -287,15 +287,15 @@ int main(int argc,char*argv[])
 			y=0;
 			i=0;
 			while((ch=gzgetc(in))!='\n')
-  		{
-    		line2[y]=ch;
-    		if(ch=='\t')
-    		{
-      		tab_locations2[i]=line2+y;
-      		i++;
-    		}
-    		y++;
-  		}
+            {
+                line2[y]=ch;
+                if(ch=='\t')
+                {
+                    tab_locations2[i]=line2+y;
+                    i++;
+                }
+                y++;
+            }
 			line2[y]='\0';
 			strncpy(barcode_read,strchr(line,'#')+1,bc_length);
 			strncpy(mapped_contig,tab_locations1[1]+1,tab_locations1[2]-tab_locations1[1]-1);
@@ -313,10 +313,10 @@ int main(int argc,char*argv[])
 				strncpy(cigar2,tab_locations1[4]+1,(tab_locations1[5]-tab_locations1[4]-1));
 				cigar2[tab_locations1[5]-tab_locations1[4]-1]='\0';
 				strncpy(read1seq,tab_locations2[8]+1,76);
-        strncpy(read2seq,tab_locations1[8]+1,76);
+                strncpy(read2seq,tab_locations1[8]+1,76);
 				strncpy(original_quality,tab_locations2[9]+1,76);
-      	strncpy(original_quality2,tab_locations1[9]+1,76);
-				strncpy(md,strstr(line2,"MD")+strlen("MD")+3,300);
+                strncpy(original_quality2,tab_locations1[9]+1,76);
+                strncpy(md,strstr(line2,"MD")+strlen("MD")+3,300);
 				strncpy(md2,strstr(line,"MD")+strlen("MD")+3,300);
 			}
 			else //1st read is read 1 of pair
@@ -326,14 +326,14 @@ int main(int argc,char*argv[])
 				target_size=strtol(tab_locations1[7]+1,NULL,10)+2;
 				strncpy(cigar,tab_locations1[4]+1,(tab_locations1[5]-tab_locations1[4]-1));
 				cigar[tab_locations1[5]-tab_locations1[4]-1]='\0';
-    		strncpy(cigar2,tab_locations2[4]+1,(tab_locations2[5]-tab_locations2[4]-1));
+                strncpy(cigar2,tab_locations2[4]+1,(tab_locations2[5]-tab_locations2[4]-1));
 				cigar2[tab_locations2[5]-tab_locations2[4]-1]='\0';
 				strncpy(read1seq,tab_locations1[8]+1,76);
-        strncpy(read2seq,tab_locations2[8]+1,76);
+                strncpy(read2seq,tab_locations2[8]+1,76);
 				strncpy(original_quality,tab_locations1[9]+1,76);
-      	strncpy(original_quality2,tab_locations2[9]+1,76);
+                strncpy(original_quality2,tab_locations2[9]+1,76);
 				strncpy(md,strstr(line,"MD")+strlen("MD")+3,300);
-      	strncpy(md2,strstr(line2,"MD")+strlen("MD")+3,300);
+                strncpy(md2,strstr(line2,"MD")+strlen("MD")+3,300);
 			}
 
 			//determine if mapping location corresponds to a valid MIP target
@@ -388,9 +388,9 @@ int main(int argc,char*argv[])
 			else //low number of paralog-variant bases suggests an indel within mip target sequence is not likely
 			{
 				if((target_size<(152-strict_insert_wiggle_room))||(target_size>(152+strict_insert_wiggle_room)))
-      	{
-        	continue; //insert size of mapped reads is outside of expected range for a MIP target
-      	}
+                {
+                    continue; //insert size of mapped reads is outside of expected range for a MIP target
+                }
 			}
 
 			//initialize array of quality values to store quality scores of read bases corresponding to reference bases 1-152 of MIP target sequence
@@ -556,17 +556,17 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 	long num_bases,num_matches;
 	int md_offset=0;
 	char alignment_type,ch;
-  char dummy[4];
+    char dummy[4];
 	int i=0,j,k;
 	int from_ins=0;
 	while(cigar_string[i]!='\0') //while some CIGAR string left to process
 	{
 		num_bases=strtol(cigar_string+i,NULL,10); //calculate number of bases mapped (M), inserted (I), or deleted (D)
 		while(!(isalpha(cigar_string[i])))
-    {
-    	i++;
-    }
-    alignment_type=cigar_string[i]; //calculate whether bases mapped (M), are inserted (I), or are deleted (D)
+        {
+            i++;
+        }
+        alignment_type=cigar_string[i]; //calculate whether bases mapped (M), are inserted (I), or are deleted (D)
 		i++; //increment i so next part of cigar string will be either a number or the null character
 		if(alignment_type=='M') //read bases mapped
 		{
@@ -575,8 +575,8 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 				k=0;
 				num_matches=strtol(md_string+md_offset,NULL,10); //determine how many mapped bases are matches from the MD string
 				sprintf(dummy,"%ld\0",num_matches);
-      	md_offset+=strlen(dummy);
-      	ch=md_string[md_offset]; //using MD string, determine whether first base after last matching base is a substitution (A,C,G,T) or 'deleted' (^) compared to the reference
+                md_offset+=strlen(dummy);
+                ch=md_string[md_offset]; //using MD string, determine whether first base after last matching base is a substitution (A,C,G,T) or 'deleted' (^) compared to the reference
 			}
 			from_ins=0;
 			for(j=0;j<num_bases;j++,k++)
@@ -596,9 +596,9 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 							sequence_array[index]=read_sequence[read_index];
 						}
 						num_matches=strtol(md_string+md_offset,NULL,10);
-      			sprintf(dummy,"%ld\0",num_matches);
-      			md_offset+=strlen(dummy);
-      			ch=md_string[md_offset];
+                        sprintf(dummy,"%ld\0",num_matches);
+                        md_offset+=strlen(dummy);
+                        ch=md_string[md_offset];
 						k=-1; //since k is incremented at the end of the loop and we want new k=0
 					}
 				}
