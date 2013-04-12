@@ -30,11 +30,11 @@
  * This program should be run from the directory containing mrfast output files (gzipped sam files), i.e. a "mrfast_mapping_output" directory
  */
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
-#include<string.h>
-#include<zlib.h>
+#include <string.h>
+#include <zlib.h>
 
 // There are 384 barcodes, so the maximum possible number of individuals per
 // experiment is 384. Each barcode is 8 bp.
