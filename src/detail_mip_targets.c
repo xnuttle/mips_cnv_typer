@@ -78,6 +78,9 @@
 // MIPs are expected to be this many bases long.
 static const int mip_length = 152;
 
+// Master sequence is limited to a size of 1 Mb.
+static const int maximum_master_sequence_length = 1000001;
+
 int main(int argc,char*argv[])
 {
 	// Check to make sure there are there are enough command line arguments provided.
@@ -185,7 +188,7 @@ int main(int argc,char*argv[])
 	{
 		//input master sequence
 		char*master_sequence;
-		master_sequence=(char*)malloc(1000001*sizeof(char)); //1 Mb size limit on master sequence
+		master_sequence=(char*)malloc(maximum_master_sequence_length*sizeof(char)); //1 Mb size limit on master sequence
 		if(master_sequence==NULL)
 		{
 			printf("Memory allocation failed!\n");
@@ -225,7 +228,7 @@ int main(int argc,char*argv[])
       	}
     	}
 			contig_sequence_names[j][k]='\0';
-			contig_sequences[j]=(char*)malloc(1000001*sizeof(char));
+			contig_sequences[j]=(char*)malloc(maximum_master_sequence_length*sizeof(char));
 			if(contig_sequences[j]==NULL)
 			{
 				printf("Memory allocation failed!\n");
