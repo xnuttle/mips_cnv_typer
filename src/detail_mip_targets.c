@@ -75,6 +75,9 @@
 #include <ctype.h>
 #include<string.h>
 
+// MIPs are expected to be this many bases long.
+static const int mip_length = 152;
+
 int main(int argc,char*argv[])
 {
 	// Check to make sure there are there are enough command line arguments provided.
@@ -296,7 +299,7 @@ int main(int argc,char*argv[])
 		char contig_target_seqs[num_contigs_per_family[i]][153];
 		for(j=0;j<(num_contigs_per_family[i]);j++)
 		{
-			contig_target_seqs[j][152]='\0';
+			contig_target_seqs[j][mip_length]='\0';
 		}
 		for(j=0;j<num_mips_per_family[i];j++)
 		{
@@ -381,7 +384,7 @@ int main(int argc,char*argv[])
 				{
 					sprintf(temp,"%s:0;",contig_sequence_names[k]);
 					strcat(mip_targets[m].contig_start_locs,temp);
-					for(n=0;n<152;n++)
+					for(n=0;n<mip_length;n++)
 					{
 						contig_target_seqs[k][n]='-';
 					}
@@ -390,13 +393,13 @@ int main(int argc,char*argv[])
 				{
 					sprintf(temp,"%s:%ld;",contig_sequence_names[k],(long)(contig_start_loc_ptr-contig_start_ptr+1));
 					strcat(mip_targets[m].contig_start_locs,temp);
-					strncpy(contig_target_seqs[k],contig_start_loc_ptr,152);
+					strncpy(contig_target_seqs[k],contig_start_loc_ptr,mip_length);
 				}
 			}
 
 			//calculate local coordinates within 152 bp target of any sites where variation in the form of substitution between paralogs is observed
 			has_variation_between_paralogs=0;
-			for(n=0;n<152;n++)
+			for(n=0;n<mip_length;n++)
 			{
 				first_contig_seq=0;
 				oldbase=contig_target_seqs[first_contig_seq][n];
