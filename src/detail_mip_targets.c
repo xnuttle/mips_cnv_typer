@@ -70,10 +70,10 @@
  * data) due to a targeting conflict into account.
  */
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
-#include<string.h>
+#include <string.h>
 
 // MIPs are expected to be this many bases long.
 static const int mip_length = 152;
