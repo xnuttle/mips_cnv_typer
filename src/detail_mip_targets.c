@@ -111,26 +111,26 @@ int main(int argc,char*argv[])
 	//set up mip target structure
 	struct mip_target
 	{
-		char target_sequence[51];
-		char master_loc[31];
-		char contig_start_locs[61*max_num_contigs];
+		char target_sequence[51]; // MAGIC
+		char master_loc[31]; // MAGIC
+		char contig_start_locs[61*max_num_contigs]; // MAGIC
 		char mip_type;
 		char mip_orientation;
-		char variant_locs[601];
-		char fixed_sun_locs[301];
+		char variant_locs[601]; // MAGIC
+		char fixed_sun_locs[301]; // MAGIC
 		char specificity[max_num_contigs+1];
 		int first_arm_length;
 	};
 
 	//get names of master sequences
-	char master_sequence_names[num_gene_families][51];
+	char master_sequence_names[num_gene_families][51]; // MAGIC
 	FILE*master_sequence_files[num_gene_families];
 	char ch;
 	int j;
 	for(i=0;i<num_gene_families;i++)
 	{
 		j=0;
-		master_sequence_files[i]=fopen(*(argv+3+num_gene_families+i),"r");
+		master_sequence_files[i]=fopen(*(argv+3+num_gene_families+i),"r"); // MAGIC (3?)
 		while(((ch=getc(master_sequence_files[i]))!='\n')&&(ch!='\r'))
 		{
 			if(ch!='>')
@@ -152,8 +152,8 @@ int main(int argc,char*argv[])
 	}
 	FILE*mip_arm_locations_file;
 	fpos_t pos;
-	char master_sequence_target[51];
-	master_sequence_target[50]='\0';
+	char master_sequence_target[51]; // MAGIC
+	master_sequence_target[50]='\0'; // MAGIC
 	long ext_start,ext_end,lig_start,lig_end;
 	mip_arm_locations_file=fopen(*(argv+1),"r");
 	fgetpos(mip_arm_locations_file,&pos);
@@ -212,7 +212,7 @@ int main(int argc,char*argv[])
 		{
 			num_prev_gene_family_files+=num_contigs_per_family[j]+2; //number of contig sequence files + fixed SUNs file + exons file
 		}
-		char contig_sequence_names[num_contigs_per_family[i]][51];
+		char contig_sequence_names[num_contigs_per_family[i]][51]; // MAGIC
 		FILE*contig_sequence_files[num_contigs_per_family[i]];
 		char*contig_sequences[num_contigs_per_family[i]];
 		for(j=0;j<num_contigs_per_family[i];j++)
@@ -250,8 +250,8 @@ int main(int argc,char*argv[])
 		//input fixed suns
 		FILE*fixed_suns_file;
 		int num_fixed_suns=0;
-		char sun_containing_contig_name[51];
-		sun_containing_contig_name[50]='\0';
+		char sun_containing_contig_name[51]; // MAGIC
+		sun_containing_contig_name[50]='\0'; // MAGIC
 		long contig_sun_loc,master_sun_loc;
 		double sun_score;
 		fixed_suns_file=fopen(*(argv+3+2*num_gene_families+num_prev_gene_family_files+num_contigs_per_family[i]),"r");
@@ -273,7 +273,7 @@ int main(int argc,char*argv[])
 		//input exons
 		FILE*exons_file;
 		int num_exons=0;
-		exons_file=fopen(*(argv+3+2*num_gene_families+num_prev_gene_family_files+num_contigs_per_family[i]+1),"r");
+		exons_file=fopen(*(argv+3+2*num_gene_families+num_prev_gene_family_files+num_contigs_per_family[i]+1),"r");  // MAGIC
 		fgetpos(exons_file,&pos);
 		while(fscanf(exons_file,"%s %ld %ld",sun_containing_contig_name,&contig_sun_loc,&master_sun_loc)==3)
 		{
@@ -298,8 +298,8 @@ int main(int argc,char*argv[])
 		char*contig_start_ptr,*contig_start_loc_ptr;
 		char oldbase,newbase;
 		int num_matches;
-		char temp[51];
-		char contig_target_seqs[num_contigs_per_family[i]][153];
+		char temp[51]; // MAGIC
+		char contig_target_seqs[num_contigs_per_family[i]][153]; // MAGIC
 		for(j=0;j<(num_contigs_per_family[i]);j++)
 		{
 			contig_target_seqs[j][mip_length]='\0';
@@ -313,7 +313,7 @@ int main(int argc,char*argv[])
 			fscanf(mip_arm_locations_file,"%s %ld %ld %ld %ld",master_sequence_target,&ext_start,&ext_end,&lig_start,&lig_end);
 
 			//store information on target sequence
-			strncpy(mip_targets[m].target_sequence,master_sequence_target,50);
+			strncpy(mip_targets[m].target_sequence,master_sequence_target,50); // MAGIC
 
 			//calculate master sequence start and end coordinates of target sequence, mip orientation, and length of first hybridization arm
 			if(ext_start<lig_start)
@@ -456,7 +456,7 @@ int main(int argc,char*argv[])
 	//print information on each mip target to output file
 	FILE*out;
 	char extension[12]=".miptargets";
-	char output_file_name[62];
+	char output_file_name[62]; // MAGIC
 	sprintf(output_file_name,"%s",*(argv+(argc-1)));
 	strcat(output_file_name,extension);
 	out=fopen(output_file_name,"w");
