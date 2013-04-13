@@ -1,48 +1,74 @@
-//Xander Nuttle
-//detail_mip_targets.c
-//Generates a file containing information on MIP targets and prints out information on any targeting conflicts.
-//Call: ./detail_mip_targets mip.armlocs (int)number_of_gene_families (int)number_of_contigs_in_1st_gene_family <(int)number_of_contigs_in_Nth_gene_family> master_sequence_for_1st_family.fasta <master_sequence_for_Nth_family.fasta> 1st_family_1st_contig.fasta 1st_family_2nd_contig.fasta <1st_family_Nth_contig.fasta> 1st_family.suns.fixed 1st_family_exons.bed <Nth_family_first_contig.fasta> <Nth_family_Nth_contig.fasta> <Nth_family.suns.fixed> <Nth_family_exons.bed> output_file_base_name
-//
-//Example call: ./detail_mip_targets SRGAP2_RH_mip.armlocs 2 4 2 SRGAP2_1q32.fasta RH_master.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/q32_contig_final.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/q21_contig_new_oct2011.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/p12_contig_new_oct_2011.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/CH17-266P3.fasta SRGAP2.suns.fixed SRGAP2_1q32_exons.bed ../RH/RHD_contig.fasta ../RH/RHCE_contig.fasta RH.suns.fixed RH_exons.bed SRGAP2_RH
-//
-//In order to analyze mapped sequence data from a MIP experiment, it is first necessary to detail MIP targets and store important information about them
-//in a format that allows for straightforward input into an analysis program. This program performs these tasks for an arbitrary set of MIPs. Inputs are:
-// -an armlocs file containing MIP targeted gene family(ies), and extension and ligation arm start and end coordinates (base 1) with respect to the
-// targeted gene family's master sequence (this file can be easily created from information in the MIP design Excel file); MIPs in this file should be
-// sorted by the gene family they target
-// -a series of at least two integers, the first being the number of gene families targeted and the rest corresponding to numbers of contig sequences
-// in each targeted gene family
-// -fasta files containing each gene family's master sequence (if there are multiple targeted gene families, the order of fasta files should match the
-// order of integers specifying the number of contigs in each gene family)
-// -for each gene family targeted, fasta files containing contig sequences, a fixed SUNs file, and a bed file specifying exon coordinates (base 1)
-// in the master sequence
-// -the base name of your desired output file (to which ".miptargets" will be appended to give you your final output file)
-//
-//Example line from input file "mip.armlocs" followed by an explanation of each field in brakets (each MIP gets its own line):
-//SRGAP2_1q32 4543  4561  4410  4430
-//[target_master_sequence extension_probe_start extension_probe_stop ligation_probe_start ligation_prob_stop]
-//
-//This program output a file having 9 fields containing information on each MIP target:
-//  1-name of master sequence targeted
-//  2-start and end coordinates (start,end) of targeted sequence plus arms with respect to master sequence
-//  3-string of contig names and start coordinates of targeted sequence plus arms with respect to each contig (name:start;)
-//  4-MIP type (S=SUN-targeting, E=exon-targeting, B=both)
-//  5-string of locations of paralog-specificity-conferring variation (all such variation seen in aligned sequences) with respect to targeted sequence plus arms
-//  	(loc1,loc2,loc3,); this will be used to flag such bases for base call quality assessment; the range of locations is 1-152 becaue targeted sequence plus arms is 152 bp
-//  6-same as field 5, except only containing locations of fixed SUNs with respect to targeted sequence plus arms; this will be used to flag such bases for
-//  	assessment of mismatches at those locations
-//  7-string of ones and zeros having length equal to the number of contigs corresponding to the targeted master sequence, with a "1" indicating the
-//    corresponding targeted contig sequence is distinguishable from other contig sequences and a "0" indicating the opposite (1010); this example means paralogs
-//    1 and 3 have unique sequence over the 152 targeted bases but paralogs 2 and 4 are indistinguishable
-//  8-mip orientation with respect to master sequence (+ or -)
-//	9-length of the first MIP arm in bp (first with respect to the reference contig coordinates)
-//
-//Example line from output file "SRGAP2_RH.miptargets"
-//SRGAP2_1q32	4893,5044	1q32.1_final:123878;q21_contig_new_oct_2011:145255;p12_contig_new_oct_2011:275550;SRGAP2D_contig:59940;	S	34,41,103,	41,103,	1010	-	22
-//
-//Finally, this program also prints to standard output any targeting conflicts detected (instances of more than 1 MIP targeting the same strand of the same genomic region).
-//Such situations are possible if MIP design for exonic regions and for SUN regions was not integrated to avoid such conflicts. Interpretaion of any data
-//from MIPs having targeting conflicts should take the possibility of poor capture performance (and resulting poor data) due to a targeting conflict into account.
+/*
+ * Xander Nuttle
+ *
+ * detail_mip_targets.c
+ *
+ * Generates a file containing information on MIP targets and prints out information on any targeting conflicts.
+ *
+ * Call: ./detail_mip_targets mip.armlocs (int)number_of_gene_families (int)number_of_contigs_in_1st_gene_family <(int)number_of_contigs_in_Nth_gene_family> master_sequence_for_1st_family.fasta <master_sequence_for_Nth_family.fasta> 1st_family_1st_contig.fasta 1st_family_2nd_contig.fasta <1st_family_Nth_contig.fasta> 1st_family.suns.fixed 1st_family_exons.bed <Nth_family_first_contig.fasta> <Nth_family_Nth_contig.fasta> <Nth_family.suns.fixed> <Nth_family_exons.bed> output_file_base_name
+ * Example call: ./detail_mip_targets SRGAP2_RH_mip.armlocs 2 4 2 SRGAP2_1q32.fasta RH_master.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/q32_contig_final.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/q21_contig_new_oct2011.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/p12_contig_new_oct_2011.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/CH17-266P3.fasta SRGAP2.suns.fixed SRGAP2_1q32_exons.bed ../RH/RHD_contig.fasta ../RH/RHCE_contig.fasta RH.suns.fixed RH_exons.bed SRGAP2_RH
+ *
+ * In order to analyze mapped sequence data from a MIP experiment, it is first
+ * necessary to detail MIP targets and store important information about them in
+ * a format that allows for straightforward input into an analysis program. This
+ * program performs these tasks for an arbitrary set of MIPs. Inputs are:
+ *
+ * - an armlocs file containing MIP targeted gene family(ies), and extension and
+ * ligation arm start and end coordinates (base 1) with respect to the targeted
+ * gene family's master sequence (this file can be easily created from
+ * information in the MIP design Excel file); MIPs in this file should be sorted
+ * by the gene family they target
+ *
+ * - a series of at least two integers, the first being the number of gene
+ * families targeted and the rest corresponding to numbers of contig sequences
+ * in each targeted gene family
+ *
+ * - fasta files containing each gene family's master sequence (if there are
+ * multiple targeted gene families, the order of fasta files should match the
+ * order of integers specifying the number of contigs in each gene family)
+ *
+ * - for each gene family targeted, fasta files containing contig sequences, a
+ * fixed SUNs file, and a bed file specifying exon coordinates (base 1) in the
+ * master sequence
+ *
+ * - the base name of your desired output file (to which ".miptargets" will be
+ * appended to give you your final output file)
+ *
+ * Example line from input file "mip.armlocs" followed by an explanation of each
+ * field in brakets (each MIP gets its own line):
+ *
+ * SRGAP2_1q32 4543  4561  4410  4430
+ * [target_master_sequence extension_probe_start extension_probe_stop ligation_probe_start ligation_prob_stop]
+ *
+ * This program output a file having 9 fields containing information on each MIP
+ * target:
+ *
+ *  1-name of master sequence targeted
+ *  2-start and end coordinates (start,end) of targeted sequence plus arms with respect to master sequence
+ *  3-string of contig names and start coordinates of targeted sequence plus arms with respect to each contig (name:start;)
+ *  4-MIP type (S=SUN-targeting, E=exon-targeting, B=both)
+ *  5-string of locations of paralog-specificity-conferring variation (all such variation seen in aligned sequences) with respect to targeted sequence plus arms
+ *  	(loc1,loc2,loc3,); this will be used to flag such bases for base call quality assessment; the range of locations is 1-152 becaue targeted sequence plus arms is 152 bp
+ *  6-same as field 5, except only containing locations of fixed SUNs with respect to targeted sequence plus arms; this will be used to flag such bases for
+ *  	assessment of mismatches at those locations
+ *  7-string of ones and zeros having length equal to the number of contigs corresponding to the targeted master sequence, with a "1" indicating the
+ *    corresponding targeted contig sequence is distinguishable from other contig sequences and a "0" indicating the opposite (1010); this example means paralogs
+ *    1 and 3 have unique sequence over the 152 targeted bases but paralogs 2 and 4 are indistinguishable
+ *  8-mip orientation with respect to master sequence (+ or -)
+ *	9-length of the first MIP arm in bp (first with respect to the reference contig coordinates)
+ *
+ * Example line from output file "SRGAP2_RH.miptargets"
+ *
+ * SRGAP2_1q32	4893,5044	1q32.1_final:123878;q21_contig_new_oct_2011:145255;p12_contig_new_oct_2011:275550;SRGAP2D_contig:59940;	S	34,41,103,	41,103,	1010	-	22
+ *
+ * Finally, this program also prints to standard output any targeting conflicts
+ * detected (instances of more than 1 MIP targeting the same strand of the same
+ * genomic region).  Such situations are possible if MIP design for exonic
+ * regions and for SUN regions was not integrated to avoid such
+ * conflicts. Interpretaion of any data from MIPs having targeting conflicts
+ * should take the possibility of poor capture performance (and resulting poor
+ * data) due to a targeting conflict into account.
+ */
 
 #include<stdio.h>
 #include<stdlib.h>
