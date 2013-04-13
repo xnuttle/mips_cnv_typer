@@ -11,6 +11,7 @@ all : $(BINARIES)
 .PHONY : clean
 
 bin/% : src/%.c
+	mkdir -p bin
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean :
