@@ -77,6 +77,14 @@
 
 int main(int argc,char*argv[])
 {
+	// Check to make sure there are there are enough command line arguments provided.
+	if(argc == 1)
+    {
+		printf("Usage: %s mip.armlocs (int)number_of_gene_families (int)number_of_contigs_in_1st_gene_family <(int)number_of_contigs_in_Nth_gene_family> master_sequence_for_1st_family.fasta <master_sequence_for_Nth_family.fasta> 1st_family_1st_contig.fasta 1st_family_2nd_contig.fasta <1st_family_Nth_contig.fasta> 1st_family.suns.fixed 1st_family_exons.bed <Nth_family_first_contig.fasta> <Nth_family_Nth_contig.fasta> <Nth_family.suns.fixed> <Nth_family_exons.bed> output_file_base_name\n\n", argv[0]);
+        printf("Example call: %s SRGAP2_RH_mip.armlocs 2 4 2 SRGAP2_1q32.fasta RH_master.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/q32_contig_final.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/q21_contig_new_oct2011.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/p12_contig_new_oct_2011.fasta ~/SUNK_analysis_SRGAP2_chr1q21_final/CH17-266P3.fasta SRGAP2.suns.fixed SRGAP2_1q32_exons.bed ../RH/RHD_contig.fasta ../RH/RHCE_contig.fasta RH.suns.fixed RH_exons.bed SRGAP2_RH\n", argv[0]);
+		return 1;
+	}
+
 	//get information from command line on number of gene families
 	int num_gene_families;
 	num_gene_families=strtol(*(argv+2),NULL,10);
