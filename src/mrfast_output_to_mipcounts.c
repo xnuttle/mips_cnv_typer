@@ -35,10 +35,11 @@
 #include <ctype.h>
 #include <string.h>
 #include <zlib.h>
+#include "iniparser.h"
 
 // There are 384 barcodes, so the maximum possible number of individuals per
 // experiment is 384. Each barcode is 8 bp.
-static const int maximum_barcodes = 384;
+// static const int maximum_barcodes = 384;
 
 // MIPs are expected to be this many bases long.
 static const int mip_length = 152;
@@ -47,6 +48,18 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 
 int main(int argc,char*argv[])
 {
+    // Load the configuration file.
+    dictionary* ini;
+    ini = iniparser_load("mipcounter.ini");
+    if (ini==NULL) {
+        fprintf(stderr, "Cannot open configuration file: %s\n", "mipcounter.ini");
+        return -1;
+    }
+    iniparser_dump(ini, stderr);
+
+    // Set constants based on configuration settings.
+    const int maximum_barcodes = iniparser_getint(ini, "barcodes:maximum", -1);
+
 	// Check to make sure there are there are enough command line arguments provided.
 	if(argc<5)
     {
