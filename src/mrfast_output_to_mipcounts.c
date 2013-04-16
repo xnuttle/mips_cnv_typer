@@ -40,25 +40,41 @@
 // experiment is 384. Each barcode is 8 bp.
 static const int maximum_barcodes = 384;
 
-// MIPs are expected to be this many bases long.
+// MIP target sequences plus hybridization arms are expected to be this many bases long.
 static const int mip_length = 152;
+
+static const int max_length_sample_name=50;
+static const int max_length_miptargets_file_field=500;
+static const int max_possible_num_plogs=50;
+static const int max_length_seqname=50;
+static const int max_length_line=5000;
+static const int max_length_filename=50;
+static const int trimmed_read_length=76;
+static const int max_length_cigar_md_strs=300;
+static const int wiggle_room=4; //wiggle_room = number of bases actual mapping location can differ from mip target location for a read to be considered to be mapping to a mip target
+static const int num_mrfast_output_fields=13;
+static const int strict_insert_wiggle_room=2; //insert_wiggle_room = number of bp mapped insert size can differ from expected insert size
+static const int indel_insert_wiggle_room=10; //insert_wiggle_room = number of bp mapped insert size can differ from expected insert size
+static const int indel_cutoff=20; //mip target sequence clearly has indel if there are 20+ paralog-variant bases in mip target (this is due to the fact that aligned sequences were not used to determine all MIPs)
+static const int num_args=4; //number of required command line arguments
+static const int num_miptargets_file_fields=9;
 
 int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*original_quality_array,long mapping_location,long expected_mapping_location,char*sequence_array,char*quality_array,int*is_base_mm_array);
 
 int main(int argc,char*argv[])
 {
 	// Check to make sure there are there are enough command line arguments provided.
-	if(argc<5)
-    {
+	if(argc<(num_args+1)) //argc includes the program call in its count
+ 	{
 		printf("Usage: %s <miptargets_file> <individual_barcode_key_file> <text_file_with_names_of_mapping_output_files> <output_file_base_name>\n\n", argv[0]);
-        printf("Example call: %s SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt > pos_ctrl_expt.problemreads\n", argv[0]);
+    printf("Example call: %s SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt\n", argv[0]);
 		return 1;
 	}
 
 	// Read in barcode key file and determine barcode length and the number of
     // individuals in the experiment.
     FILE*barcodekey;
-    char dummystr[2][51]; // MAGIC
+    char dummystr[2][max_length_sample_name+1];
     fpos_t start_bcfile;
     int bc_length;
     barcodekey=fopen(*(argv+2),"r");
@@ -66,7 +82,7 @@ int main(int argc,char*argv[])
     fscanf(barcodekey,"%s %s",dummystr[0],dummystr[1]);
     fsetpos(barcodekey,&start_bcfile);
     bc_length=strlen(dummystr[1]); //barcode length
-    char sample_names[maximum_barcodes][51]; // MAGIC
+    char sample_names[maximum_barcodes][max_length_sample_name+1];
     char barcodes[maximum_barcodes][bc_length+1];
     int num_indivs;
     int i=0;
@@ -81,11 +97,11 @@ int main(int argc,char*argv[])
 	long max_num_contigs=0,num_mip_targets=0;
 	FILE*miptargetsfile;
 	fpos_t pos;
-	char dummy[501]; // MAGIC
-	char specstring[51]; // MAGIC
+	char dummy[max_length_miptargets_file_field+1];
+	char specstring[max_possible_num_plogs+1];
 	miptargetsfile=fopen(*(argv+1),"r");
     fgetpos(miptargetsfile,&pos);
-	while(fscanf(miptargetsfile,"%s %s %s %s %s %s %s %s %s",dummy,dummy,dummy,dummy,dummy,dummy,specstring,dummy,dummy)==9)
+	while(fscanf(miptargetsfile,"%s %s %s %s %s %s %s %s %s",dummy,dummy,dummy,dummy,dummy,dummy,specstring,dummy,dummy)==num_miptargets_file_fields)
     {
 		num_mip_targets++;
 		if(strlen(specstring)>max_num_contigs)
@@ -98,9 +114,9 @@ int main(int argc,char*argv[])
 	//set up mip structure
 	struct mip
 	{
-		char master_target_name[51]; // MAGIC
+		char master_target_name[max_length_seqname+1];
 		long master_coordinate;
-		char contig_names[max_num_contigs][51]; // MAGIC
+		char contig_names[max_num_contigs][max_length_seqname+1];
 		long contig_start_coords[max_num_contigs];
 		char mip_type;
 		int important_bases[mip_length];
@@ -111,7 +127,7 @@ int main(int argc,char*argv[])
 	//set up structure containing information on mip hybridization counts to output
 	struct mip_hyb_counts
 	{
-		char individual[51]; // MAGIC
+		char individual[max_length_sample_name+1];
 		long hyb_counts[num_mip_targets][max_num_contigs+1];
 	};
 
@@ -128,13 +144,13 @@ int main(int argc,char*argv[])
 	struct mip_hyb_counts*individual_counts;
 	individual_counts=(struct mip_hyb_counts*)malloc(num_indivs*sizeof(struct mip_hyb_counts));
 	if(individual_counts==NULL)
-    {
-        printf("Memory allocation for count information failed!\n");
-        return 1;
-    }
+  {
+  	printf("Memory allocation for count information failed!\n");
+    return 1;
+  }
 
 	//read in file containing information on mip target locations and store data in mip structure elements
-	char line[5001]; // MAGIC
+	char line[max_length_line+1];
 	char ch;
 	int j,y,z;
 	long master_start,master_end,var_position;
@@ -257,20 +273,20 @@ int main(int argc,char*argv[])
 
 	//read in text file containing names of all gzipped mapping output files to input to program, and process each file one-by-one
 	FILE*textfile;
-	char input_file_name[51]; // MAGIC
-	char line2[5001];
+	char input_file_name[max_length_filename+1];
+	char line2[max_length_line+1];
     char mapped_orientation;
 	char barcode_read[bc_length+1];
-    char mapped_contig[18];
+    char mapped_contig[max_length_seqname+1];
     long mapping_loc,mapping_loc2;
     long target_size;
-    char quality[mip_length],original_quality[76],original_quality2[76];
-	char sequence[mip_length],read1seq[76],read2seq[76];
+    char quality[mip_length],original_quality[trimmed_read_length],original_quality2[trimmed_read_length];
+	char sequence[mip_length],read1seq[trimmed_read_length],read2seq[trimmed_read_length];
     int is_base_mm[mip_length];
-    char cigar[301],cigar2[301];
-    char md[301],md2[301];
-    char*tab_locations1[12];
-    char*tab_locations2[12];
+    char cigar[max_length_cigar_md_strs+1],cigar2[max_length_cigar_md_strs+1];
+    char md[max_length_cigar_md_strs+1],md2[max_length_cigar_md_strs+1];
+    char*tab_locations1[num_mrfast_output_fields-1]; //number of tabs is nuber of fields - 1 
+    char*tab_locations2[num_mrfast_output_fields-1];
 	textfile=fopen(*(argv+3),"r");
 	while(fscanf(textfile,"%s",input_file_name)==1)
     {
@@ -321,12 +337,12 @@ int main(int argc,char*argv[])
 				cigar[tab_locations2[5]-tab_locations2[4]-1]='\0';
 				strncpy(cigar2,tab_locations1[4]+1,(tab_locations1[5]-tab_locations1[4]-1));
 				cigar2[tab_locations1[5]-tab_locations1[4]-1]='\0';
-				strncpy(read1seq,tab_locations2[8]+1,76);
-                strncpy(read2seq,tab_locations1[8]+1,76);
-				strncpy(original_quality,tab_locations2[9]+1,76);
-                strncpy(original_quality2,tab_locations1[9]+1,76);
-                strncpy(md,strstr(line2,"MD")+strlen("MD")+3,300);
-				strncpy(md2,strstr(line,"MD")+strlen("MD")+3,300);
+				strncpy(read1seq,tab_locations2[8]+1,trimmed_read_length);
+                strncpy(read2seq,tab_locations1[8]+1,trimmed_read_length);
+				strncpy(original_quality,tab_locations2[9]+1,trimmed_read_length);
+                strncpy(original_quality2,tab_locations1[9]+1,trimmed_read_length);
+                strncpy(md,strstr(line2,"MD")+strlen("MD")+3,max_length_cigar_md_strs);
+				strncpy(md2,strstr(line,"MD")+strlen("MD")+3,max_length_cigar_md_strs);
 			}
 			else //1st read is read 1 of pair
 			{
@@ -337,23 +353,22 @@ int main(int argc,char*argv[])
 				cigar[tab_locations1[5]-tab_locations1[4]-1]='\0';
                 strncpy(cigar2,tab_locations2[4]+1,(tab_locations2[5]-tab_locations2[4]-1));
 				cigar2[tab_locations2[5]-tab_locations2[4]-1]='\0';
-				strncpy(read1seq,tab_locations1[8]+1,76);
-                strncpy(read2seq,tab_locations2[8]+1,76);
-				strncpy(original_quality,tab_locations1[9]+1,76);
-                strncpy(original_quality2,tab_locations2[9]+1,76);
-				strncpy(md,strstr(line,"MD")+strlen("MD")+3,300);
-                strncpy(md2,strstr(line2,"MD")+strlen("MD")+3,300);
+				strncpy(read1seq,tab_locations1[8]+1,trimmed_read_length);
+                strncpy(read2seq,tab_locations2[8]+1,trimmed_read_length);
+				strncpy(original_quality,tab_locations1[9]+1,trimmed_read_length);
+                strncpy(original_quality2,tab_locations2[9]+1,trimmed_read_length);
+				strncpy(md,strstr(line,"MD")+strlen("MD")+3,max_length_cigar_md_strs);
+                strncpy(md2,strstr(line2,"MD")+strlen("MD")+3,max_length_cigar_md_strs);
 			}
 
 			//determine if mapping location corresponds to a valid MIP target
-			int wiggle_room=4; //wiggle_room = number of bases actual mapping location can differ from mip target location for a read to be considered to be mapping to a mip target
 			int mapped_mip=-1,contig_num;
 			for(j=0;j<num_mip_targets;j++)
 			{
 				contig_num=-1;
 				for(k=0;k<max_num_contigs;k++)
 				{
-					if(strncmp(mips[j].contig_names[k],mapped_contig,17)==0)
+					if(strncmp(mips[j].contig_names[k],mapped_contig,tab_locations1[2]-tab_locations1[1]-1)==0)
 					{
 						contig_num=k;
 						break;
@@ -374,7 +389,6 @@ int main(int argc,char*argv[])
 			}
 
 			//determine if mapped mip target sequence has internal indels between paralogs and ensure insert size is consistent with the expectation for MIPs (152 bp)
-			int strict_insert_wiggle_room=2,indel_insert_wiggle_room=10; //insert_wiggle_room = number of bp mapped insert size can differ from expected insert size
 			int sum=0;
 			int has_indel=0;
 			for(k=0;k<mip_length;k++)
@@ -384,7 +398,7 @@ int main(int argc,char*argv[])
 					sum++;
 				}
 			}
-			if(sum>=20)
+			if(sum>=indel_cutoff)
 			//mip target sequence clearly has indel; 20+ paralog-variant bases are due to the fact that aligned sequences were not used to determine these
 			//assumption of no indels may be violated for exon-targeting or single-SUN targeting MIPs which were designed blind to the alignment between paralogs
 			{
@@ -397,9 +411,9 @@ int main(int argc,char*argv[])
 			else //low number of paralog-variant bases suggests an indel within mip target sequence is not likely
 			{
 				if((target_size<(mip_length-strict_insert_wiggle_room))||(target_size>(mip_length+strict_insert_wiggle_room)))
-                {
-                    continue; //insert size of mapped reads is outside of expected range for a MIP target
-                }
+        {
+          continue; //insert size of mapped reads is outside of expected range for a MIP target
+        }
 			}
 
 			//initialize array of quality values to store quality scores of read bases corresponding to reference bases 1-152 of MIP target sequence
@@ -459,7 +473,6 @@ int main(int argc,char*argv[])
 			}
 			if(mismatch_at_sun)
 			{
-				printf("Possible mismapping (mismatch or deletion at SUN position) for read pair:\n%s\n%s\n",line,line2);
 				continue; //mismatch or deletion at SUN position indicates a possible mismapping
 			}
 
@@ -475,7 +488,6 @@ int main(int argc,char*argv[])
 			}
 			if(indiv==-1)
 			{
-				printf("Good mapping but imperfectly matching barcode read for read pair:\n%s\n%s\n",line,line2);
 				continue; //barcode read did not perfectly match any known barcode
 			}
 			//determine if paralog mapped to can be distinguished (has specificity) or not and increment appropriate count
@@ -492,9 +504,9 @@ int main(int argc,char*argv[])
 	}
 	//print output to file
 	FILE*out;
-	char output_base_name[51]; // MAGIC
+	char output_base_name[max_length_filename+1];
 	char output_file_extension[11]=".mipcounts";
-	strncpy(output_base_name,*(argv+4),40);
+	strncpy(output_base_name,*(argv+4),max_length_filename+1-11);
 	strcat(output_base_name,output_file_extension);
 	out=fopen(output_base_name,"w");
 	fprintf(out,"Individual\tTarget_Sequence\tTarget_Coordinate\tMip_Type\t");
@@ -649,12 +661,12 @@ int parse_cigar_and_md(char*cigar_string,char*md_string,char*read_sequence,char*
 				{
 					is_base_mm_array[index]=1;
 					sequence_array[index]='-';
-					if((read_index>=1)&&(read_index<76))
+					if((read_index>=1)&&(read_index<trimmed_read_length))
 					{
 						quality_array[index]=(original_quality_array[read_index-1]+original_quality_array[read_index])/2; //quality values for 'deleted' base positions should be the average of the flanking quality values in the read
 					}
 				}
-				else if((index>=0)&&(index<mip_length)&&(read_index>=1)&&(read_index<76))
+				else if((index>=0)&&(index<mip_length)&&(read_index>=1)&&(read_index<trimmed_read_length))
 				{
 					quality_array[index]=(quality_array[index]>((original_quality_array[read_index-1]+original_quality_array[read_index])/2))?quality_array[index]:(original_quality_array[read_index-1]+original_quality_array[read_index])/2;
 				}
