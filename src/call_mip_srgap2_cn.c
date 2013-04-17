@@ -34,6 +34,46 @@
 #define KRED "\x1B[31m"
 #define KYEL "\x1B[33m"
 
+//MAGIC NUMBERS
+//static const int NUM_PLOGS=4; //number of paralogs in gene family
+//static const int SRGAP2A_MAX_CN=3; //maximum copy number genotype for SRGAP2A
+//static const int SRGAP2B_MAX_CN=4; //maximum copy number genotype for SRGAP2B
+//static const int SRGAP2C_MAX_CN=3; //maximum copy number genotype for SRGAP2C
+//static const int SRGAP2D_MAX_CN=4; //maximum copy number genotype for SRGAP2D
+#define NUM_PLOGS 4
+#define SRGAP2A_MAX_CN 3
+#define SRGAP2B_MAX_CN 4
+#define SRGAP2C_MAX_CN 3
+#define SRGAP2D_MAX_CN 4
+//static const int MIN_LIKELIHOOD=-30; //parameter setting the minimum likelihood value for a single data point
+//static const int NUM_CN_STATES=(SRGAP2A_MAX_CN+1)*(SRGAP2B_MAX_CN+1)*(SRGAP2C_MAX_CN+1)*(SRGAP2D_MAX_CN+1); //number of distinct possible copy number states
+#define MIN_LIKELIHOOD -30
+#define NUM_CN_STATES ((SRGAP2A_MAX_CN+1)*(SRGAP2B_MAX_CN+1)*(SRGAP2C_MAX_CN+1)*(SRGAP2D_MAX_CN+1))
+#define SRGAP2A_FREQ_0 exp(MIN_LIKELIHOOD)
+#define SRGAP2C_FREQ_0 exp(MIN_LIKELIHOOD)
+//static const double SRGAP2A_FREQ_0=exp(MIN_LIKELIHOOD); //frequency of a SRGAP2A copy number genotype of 0
+static const double SRGAP2A_FREQ_1=(double)3/(double)28153; //frequency of a SRGAP2A copy number genotype of 1
+static const double SRGAP2A_FREQ_2=(double)28147/(double)28153; //frequency of a SRGAP2A copy number genotype of 2
+static const double SRGAP2A_FREQ_3=(double)3/(double)28153; //frequency of a SRGAP2A copy number genotype of 3
+static const double SRGAP2B_FREQ_0=(double)3/(double)661; //frequency of a SRGAP2B copy number genotype of 0
+static const double SRGAP2B_FREQ_1=(double)33/(double)661; //frequency of a SRGAP2B copy number genotype of 1
+static const double SRGAP2B_FREQ_2=(double)575/(double)661; //frequency of a SRGAP2B copy number genotype of 2
+static const double SRGAP2B_FREQ_3=(double)49/(double)661; //frequency of a SRGAP2B copy number genotype of 3
+static const double SRGAP2B_FREQ_4=(double)1/(double)661; //frequency of a SRGAP2B copy number genotype of 4
+//static const double SRGAP2C_FREQ_0=exp(MIN_LIKELIHOOD); //frequency of a SRGAP2C copy number genotype of 0
+static const double SRGAP2C_FREQ_1=(double)2/(double)7140; //frequency of a SRGAP2C copy number genotype of 1
+static const double SRGAP2C_FREQ_2=(double)7134/(double)7140; //frequency of a SRGAP2C copy number genotype of 2
+static const double SRGAP2C_FREQ_3=(double)4/(double)7140; //frequency of a SRGAP2C copy number genotype of 3
+static const double SRGAP2D_FREQ_0=(double)3/(double)47; //frequency of a SRGAP2D copy number genotype of 0
+static const double SRGAP2D_FREQ_1=(double)9/(double)47; //frequency of a SRGAP2D copy number genotype of 1
+static const double SRGAP2D_FREQ_2=(double)28/(double)47; //frequency of a SRGAP2D copy number genotype of 2
+static const double SRGAP2D_FREQ_3=(double)6/(double)47; //frequency of a SRGAP2D copy number genotype of 3
+static const double SRGAP2D_FREQ_4=(double)1/(double)47; //frequency of a SRGAP2D copy number genotype of 4
+static const long SRGAP2D_DEL_START=105947; //master sequence base 1 coordinate of SRGAP2D deletion region start
+static const long SRGAP2D_DEL_END=213356; //master sequence base 1 coordinate of SRGAP2D deletion region end
+static const int MIN_LIKELIHOOD_DIFF=40; //see below for detailed description of this heuristic
+static const int MIN_MIPS_IN_CN_STATE=5; //see below for detailed description of this heuristic
+
 int main(int argc,char*argv[])
 {
 	//get information about number of mip targets designed for copy number genotyping
@@ -58,11 +98,11 @@ int main(int argc,char*argv[])
 	fsetpos(miptargetsfile,&pos);
 
 	//get and store information about SRGAP2 master sequence target coordinate and specificity for each MIP
-	char spec_string[5];
-	char spec[2];
+	char spec_string[NUM_PLOGS];
+	char spec[2]; // a string to hold either 0 or 1 (a MIP either has or lacks specificity for a given paralog)
 	long start,end;
 	long target_coords[num_mip_targets];
-	long specificities[num_mip_targets][4];
+	long specificities[num_mip_targets][NUM_PLOGS];
 	long i=0,j;
 	spec[1]='\0';
 	while(fscanf(miptargetsfile,"%s %ld %c %ld %s %c %s %s %s %s %s",dummy,&start,&miptype,&end,dummy,&miptype,dummy,dummy,spec_string,dummy,dummy)==11)
@@ -70,7 +110,7 @@ int main(int argc,char*argv[])
 		if(miptype!='E')
     {
 			target_coords[i]=(start+end)/2;
-			for(j=0;j<4;j++)
+			for(j=0;j<NUM_PLOGS;j++)
 			{
 				spec[0]=spec_string[j];
 				specificities[i][j]=strtol(spec,NULL,10);
@@ -83,23 +123,23 @@ int main(int argc,char*argv[])
 	//generate vector of possible SRGAP2 copy number states and vector of ln(prior probabilities) corresponding to each copy number state	
 	//assume independence of paralog-specific copy number genotypes
 	int A,B,C,D;
-  int copy_states[400][4];
-  double priors[400]; //vector of prior probabilities for each copy number state
+  int copy_states[NUM_CN_STATES][NUM_PLOGS];
+  double priors[NUM_CN_STATES]; //vector of prior probabilities for each copy number state
 		//priors_N gives the probabilities of observing a copy number state of 0,1,2,3,... for SRGAP2N
 		//these probabilities are based on empirical data from all SRGAP2 duplication/deletion screening and genotyping efforts
 		//extremely unlikely states (never observed so far but hypothetically possible) are arbitrarily assigned a value with a resulting natural logarithm of -30
-  double priors_A[4]={exp(-30),(double)3/(double)28153,(double)28147/(double)28153,(double)3/(double)28153};
-  double priors_B[5]={(double)3/(double)661,(double)33/(double)661,(double)575/(double)661,(double)49/(double)661,(double)1/(double)661};
-  double priors_C[4]={exp(-30),(double)2/(double)7140,(double)7134/(double)7140,(double)4/(double)7140}; //the 3 Signature Genomics cases genotyped by MIPs are included in denominator
-  double priors_D[5]={(double)3/(double)47,(double)9/(double)47,(double)28/(double)47,(double)6/(double)47,(double)1/(double)47}; //all SRGAP2D genotyping is from manual inspection of MIP data, Troina individual omitted
+  double priors_A[SRGAP2A_MAX_CN+1]={SRGAP2A_FREQ_0,SRGAP2A_FREQ_1,SRGAP2A_FREQ_2,SRGAP2A_FREQ_3};
+  double priors_B[SRGAP2B_MAX_CN+1]={SRGAP2B_FREQ_0,SRGAP2B_FREQ_1,SRGAP2B_FREQ_2,SRGAP2B_FREQ_3,SRGAP2B_FREQ_4};
+  double priors_C[SRGAP2C_MAX_CN+1]={SRGAP2C_FREQ_0,SRGAP2C_FREQ_1,SRGAP2C_FREQ_2,SRGAP2C_FREQ_3}; //the 3 Signature Genomics cases genotyped by MIPs are included in denominator
+  double priors_D[SRGAP2D_MAX_CN+1]={SRGAP2D_FREQ_0,SRGAP2D_FREQ_1,SRGAP2D_FREQ_2,SRGAP2D_FREQ_3,SRGAP2D_FREQ_4}; //all SRGAP2D genotyping is from manual inspection of MIP data, Troina individual omitted
   i=0;
-	for(A=0;A<=3;A++)
+	for(A=0;A<=SRGAP2A_MAX_CN;A++)
   {
-    for(B=0;B<=4;B++)
+    for(B=0;B<=SRGAP2B_MAX_CN;B++)
     {
-      for(C=0;C<=3;C++)
+      for(C=0;C<=SRGAP2C_MAX_CN;C++)
       {
-        for(D=0;D<=4;D++)
+        for(D=0;D<=SRGAP2D_MAX_CN;D++)
         {
 					copy_states[i][0]=A;
           copy_states[i][1]=B;
@@ -128,7 +168,7 @@ int main(int argc,char*argv[])
 
 	//allocate storage for likelihood graph
 	struct node*likelihood_graph;
-	likelihood_graph=(struct node*)malloc(num_mip_targets*400*sizeof(struct node));
+	likelihood_graph=(struct node*)malloc(num_mip_targets*NUM_CN_STATES*sizeof(struct node));
 
 	//initialize output files
 	FILE*out,*out2,*out3;
@@ -153,20 +193,18 @@ int main(int argc,char*argv[])
   strncpy(output_base_name,*(argv+3),38);
   strcat(output_base_name,ext3);
   out3=fopen(output_base_name,"w");
-	fprintf(out3,"Individual\tSRGAP2A_CN\tSRGAP2B_CN\tSRGAP2C_CN\tSRGAP2D_CN\tPossible_Complex_CN_Genotype\n");
+	fprintf(out3,"Individual\tSRGAP2A_CN\tSRGAP2B_CN\tSRGAP2C_CN\tSRGAP2D_CN\tPossible_Complex_CN_Genotype\n"); //THIS ISN'T A MAGIC NUMBER BUT IS A CONSTANT OF SORTS
 
 	//for each individual, read in counts, calculate and store individual likelihoods of data for each MIP under each copy number state
 	FILE*countsfile;
 	char individual[31];
-	long counts[5];
-	long indiv_counts[num_mip_targets][5];
+	long counts[NUM_PLOGS+1];
+	long indiv_counts[num_mip_targets][NUM_PLOGS+1];
 	long coord,mip_coord;
-	double probs[5];
-	//double SRGAP2A_unique_to_dup_RD_ratio;
-	//long A_dup_RD_count,A_uniq_RD_count;
+	double probs[NUM_PLOGS+1];
 	double L;
 	long k;
-	double mip_likelihoods[num_mip_targets][400];
+	double mip_likelihoods[num_mip_targets][NUM_CN_STATES];
 	individual[30]='\0';
 	countsfile=fopen(*(argv+2),"r");
 	while(getc(countsfile)!='\n')
@@ -175,55 +213,28 @@ int main(int argc,char*argv[])
 	while(fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]))==9) //while there remains data to process
 	{
 		fsetpos(countsfile,&pos);
-		//get all relevant counts for the individual being genotyped into a single 2-dimensional array of long ([num_mip_targets][5])
 		j=0;
-		//A_dup_RD_count=0;
-		//A_uniq_RD_count=0;
-		//SRGAP2A_unique_to_dup_RD_ratio=0.0;
 		for(i=0;i<(num_mip_targets+num_exon_mips);i++)
 		{
 			fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&mip_coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]));
 			if(miptype!='E')
 			{
-				for(k=0;k<5;k++)
+				for(k=0;k<(NUM_PLOGS+1);k++)
 				{
 					indiv_counts[j][k]=counts[k];
 				}
 				j++;
 			}
-			//test for possible SRGAP2A unique region dup or del by compaing total read depths from 8 high-performing MIPs in unique region and 8 high-performing MIPs in duplicated region
-			//if((mip_coord==18715)||(mip_coord==46875)||(mip_coord==71577)||(mip_coord==104123)||(mip_coord==131192)||(mip_coord==169541)||(mip_coord==207129)||(mip_coord==233822))
-			//{
-			//	A_dup_RD_count+=counts[0];
-			//}
-			//if((mip_coord==246222)||(mip_coord==249700)||(mip_coord==260484)||(mip_coord==268395)||(mip_coord==276441)||(mip_coord==280694)||(mip_coord==285265)||(mip_coord==293116))
-			//{
-			//	A_uniq_RD_count+=counts[0];
-			//}
 		}
-		//SRGAP2A_unique_to_dup_RD_ratio=(double)A_uniq_RD_count/A_dup_RD_count;
-		//if(SRGAP2A_unique_to_dup_RD_ratio<=0.5)
-		//{
-		//	 printf(KRED "\nIndividual %s shows evidence for a deletion affecting the unique 3' region of SRGAP2A!!! Unique/Dup Read Depth Ratio for A = %lf.\n",individual,SRGAP2A_unique_to_dup_RD_ratio);
-		//}
-		//else if(SRGAP2A_unique_to_dup_RD_ratio>=1.5)
-		//{
-		//	printf(KRED "\nIndividual %s shows evidence for a duplication affecting the unique 3' region of SRGAP2A!!! Unique/Dup Read Depth Ratio for A = %lf.\n",individual,SRGAP2A_unique_to_dup_RD_ratio);
-		//}
-		//else if((SRGAP2A_unique_to_dup_RD_ratio>=1.4)||(SRGAP2A_unique_to_dup_RD_ratio<=0.7))
-		//{
-		//	printf(KYEL "\nIndividual %s shows evidence for a possible dup/del affecting the unique 3' region of SRGAP2A!!! Unique/Dup Read Depth Ratio for A = %lf.\n",individual,SRGAP2A_unique_to_dup_RD_ratio);
-		//}
-
 		//calculate likelihoods of observed counts at each MIP under each possible copy number state
 		for(i=0;i<num_mip_targets;i++)
 		{
-			for(j=0;j<400;j++)
+			for(j=0;j<NUM_CN_STATES;j++)
 			{
-				probs[4]=0.0;
-				if((target_coords[i]<105947)||(target_coords[i]>213356)) //MIP not in SRGAP2D deletion region
+				probs[NUM_PLOGS]=0.0;
+				if((target_coords[i]<SRGAP2D_DEL_START)||(target_coords[i]>SRGAP2D_DEL_END)) //MIP not in SRGAP2D deletion region
 				{
-					for(k=0;k<4;k++)
+					for(k=0;k<NUM_PLOGS;k++)
 					{
 						if(specificities[i][k]==1)
 						{
@@ -232,14 +243,14 @@ int main(int argc,char*argv[])
 						else
 						{
 							probs[k]=0.0;
-							probs[4]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
+							probs[NUM_PLOGS]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
 						}
 					}
 				}
 				else
 				{
-					probs[3]=0.0;
-					for(k=0;k<3;k++)
+					probs[NUM_PLOGS-1]=0.0;
+					for(k=0;k<(NUM_PLOGS-1);k++)
           {
             if(specificities[i][k]==1)
             {
@@ -248,15 +259,15 @@ int main(int argc,char*argv[])
             else
             {
               probs[k]=0.0;
-              probs[4]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
+              probs[NUM_PLOGS]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
             }
           }
 				}
-				const unsigned int countvec[5]={indiv_counts[i][0],indiv_counts[i][1],indiv_counts[i][2],indiv_counts[i][3],indiv_counts[i][4]};
-				L=gsl_ran_multinomial_lnpdf(5,probs,countvec);
-				if(L<-30)
+				const unsigned int countvec[NUM_PLOGS+1]={indiv_counts[i][0],indiv_counts[i][1],indiv_counts[i][2],indiv_counts[i][3],indiv_counts[i][4]};
+				L=gsl_ran_multinomial_lnpdf(NUM_PLOGS+1,probs,countvec);
+				if(L<MIN_LIKELIHOOD)
 				{
-					L=-30; //minimum log likelihood value for 1 MIP probe arbitrarily assigned to -30
+					L=MIN_LIKELIHOOD; //minimum log likelihood value for 1 MIP probe arbitrarily assigned to -30
 				}
 				mip_likelihoods[i][j]=L; //[mip_target][copy_state]
 			}	
@@ -266,7 +277,7 @@ int main(int argc,char*argv[])
 		double max_max0=-DBL_MAX,max_max1=-DBL_MAX,max_max2=-DBL_MAX;
     long maxindex_max0,maxindex_max1,maxindex_max2;
 			//setup first column and calculate maximum likelihood value and index of corresponding node
-		for(j=0;j<400;j++)
+		for(j=0;j<NUM_CN_STATES;j++)
     {
       likelihood_graph[j].index=j;
 			likelihood_graph[j].state=j;
@@ -277,13 +288,13 @@ int main(int argc,char*argv[])
 			likelihood_graph[j].prev_node_2trans=NULL;
     }	
 			//setup all other verticies
-		for(j=400;j<(400*num_mip_targets);j++)
+		for(j=NUM_CN_STATES;j<(NUM_CN_STATES*num_mip_targets);j++)
     {
-      if((j%400)==0)
+      if((j%NUM_CN_STATES)==0)
       {
         max_max0=-DBL_MAX;
         max_max1=-DBL_MAX;
-        for((k=j-400);k<j;k++)
+        for((k=j-NUM_CN_STATES);k<j;k++)
         {
           if(likelihood_graph[k].max0>max_max0)
           {
@@ -298,39 +309,39 @@ int main(int argc,char*argv[])
         }
       }
       likelihood_graph[j].index=j;
-			likelihood_graph[j].state=j%400;
-			likelihood_graph[j].max0=mip_likelihoods[j/400][j%400]+likelihood_graph[j-400].max0;
-      if(max_max0>likelihood_graph[j-400].max1)
+			likelihood_graph[j].state=j%NUM_CN_STATES;
+			likelihood_graph[j].max0=mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES]+likelihood_graph[j-NUM_CN_STATES].max0;
+      if(max_max0>likelihood_graph[j-NUM_CN_STATES].max1)
       {
-        likelihood_graph[j].max1=max_max0+mip_likelihoods[j/400][j%400];
+        likelihood_graph[j].max1=max_max0+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
 				likelihood_graph[j].prev_node_1trans=&(likelihood_graph[maxindex_max0]);
       }
       else
       {
-        likelihood_graph[j].max1=likelihood_graph[j-400].max1+mip_likelihoods[j/400][j%400];
-      	likelihood_graph[j].prev_node_1trans=&(likelihood_graph[j-400]);
+        likelihood_graph[j].max1=likelihood_graph[j-NUM_CN_STATES].max1+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
+      	likelihood_graph[j].prev_node_1trans=&(likelihood_graph[j-NUM_CN_STATES]);
 			}
-      if(max_max1>likelihood_graph[j-400].max2)
+      if(max_max1>likelihood_graph[j-NUM_CN_STATES].max2)
       {
-        likelihood_graph[j].max2=max_max1+mip_likelihoods[j/400][j%400];
+        likelihood_graph[j].max2=max_max1+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
 				likelihood_graph[j].prev_node_2trans=&(likelihood_graph[maxindex_max1]);
       }
       else
       {
-        likelihood_graph[j].max2=likelihood_graph[j-400].max2+mip_likelihoods[j/400][j%400];
-				likelihood_graph[j].prev_node_2trans=&(likelihood_graph[j-400]);
+        likelihood_graph[j].max2=likelihood_graph[j-NUM_CN_STATES].max2+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
+				likelihood_graph[j].prev_node_2trans=&(likelihood_graph[j-NUM_CN_STATES]);
       }
 		}
 			//determine maximum values of final likelihoods allowing 0, 1, and 2 transitions and use to determine whether there may be multiple underlying copy number states across SRGAP2
 		max_max0=-DBL_MAX;
     max_max1=-DBL_MAX;
     max_max2=-DBL_MAX;
-    for(j=(400*num_mip_targets-400);j<(400*num_mip_targets);j++)
+    for(j=(NUM_CN_STATES*num_mip_targets-NUM_CN_STATES);j<(NUM_CN_STATES*num_mip_targets);j++)
     {
       if(likelihood_graph[j].max0>max_max0)
       {
         max_max0=likelihood_graph[j].max0;
-  			maxindex_max0=j%400; //maximally likely copy number state assuming no internal events
+  			maxindex_max0=j%NUM_CN_STATES; //maximally likely copy number state assuming no internal events
 			}
 			if(likelihood_graph[j].max1>max_max1)
       {
@@ -352,8 +363,8 @@ int main(int argc,char*argv[])
     int trans_made=0;
 			//
 			//Heuristics for predicitng 1 copy number state transition
-			//	Likelihood_1_transition - Likelihood_0_transitions > 40
-			//	At least 5 MIPs in each copy number state
+			//	Likelihood_1_transition - Likelihood_0_transitions > 40 (MIN_LIKELIHOOD_DIFF)
+			//	At least 5 MIPs in each copy number state (MIN_MIPS_IN_CN_STATE)
 			//	Likelihood_2_transitions - Likelihood_1_transition <= 40
 			//
 			//Heuristics for prediciting 2 copy number state transitions
@@ -361,7 +372,7 @@ int main(int argc,char*argv[])
 			//	At least 5 MIPs in each copy number state
 			//	Likelihood_2_transitions - Likelihood_1_transition > 40
 			//
-		if((max_max1-max_max0)>40)
+		if((max_max1-max_max0)>MIN_LIKELIHOOD_DIFF)
 		{
 			//trace back to determine number of MIPs in each state
 			//1 transition
@@ -377,12 +388,12 @@ int main(int argc,char*argv[])
       	}
     	}
 			num_mips_state1=num_mip_targets-num_mips_state2;
-			if((num_mips_state1>=5)&&(num_mips_state2>=5))
+			if((num_mips_state1>=MIN_MIPS_IN_CN_STATE)&&(num_mips_state2>=MIN_MIPS_IN_CN_STATE))
 			{
 				evidence_for_1T=1;
 			}
 		}
-		if((max_max2-max_max0)>40)
+		if((max_max2-max_max0)>MIN_LIKELIHOOD_DIFF)
 		{
 			//2 transitions
 			num_mips_state1=0;
@@ -407,11 +418,11 @@ int main(int argc,char*argv[])
 				}
 			}
 			num_mips_state1=num_mip_targets-num_mips_state2-num_mips_state3;
-			if((num_mips_state1>=5)&&(num_mips_state2>=5)&&(num_mips_state3>=5))
+			if((num_mips_state1>=MIN_MIPS_IN_CN_STATE)&&(num_mips_state2>=MIN_MIPS_IN_CN_STATE)&&(num_mips_state3>=MIN_MIPS_IN_CN_STATE))
 			{
 				if(evidence_for_1T)
 				{
-					if(max_max2-max_max1>40)
+					if(max_max2-max_max1>MIN_LIKELIHOOD_DIFF)
 					{
 						evidence_for_2T=1;
 						evidence_for_1T=0;
@@ -438,7 +449,7 @@ int main(int argc,char*argv[])
     	fprintf(out2,"Genotype (assuming no internal events): %d%d%d%d\t",copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			fprintf(out3,"%s\t%d\t%d\t%d\t%d\tYES\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			//setup first column and calculate maximum likelihood value and index of corresponding node
-			for(j=0;j<400;j++)
+			for(j=0;j<NUM_CN_STATES;j++)
 			{
 				likelihood_graph[j].state=j;
 				likelihood_graph[j].index=j;
@@ -449,24 +460,24 @@ int main(int argc,char*argv[])
 				likelihood_graph[j].prev_node_2trans=NULL;
 			}							
 			//setup all other verticies
-			for(j=400;j<(400*num_mip_targets);j++)
+			for(j=NUM_CN_STATES;j<(NUM_CN_STATES*num_mip_targets);j++)
 			{
       	max_max0=-DBL_MAX;
       	max_max1=-DBL_MAX;
 				maxindex_max0=0;
 				maxindex_max1=0;
-				for((k=j-400);k<j;k++)
+				for((k=j-NUM_CN_STATES);k<j;k++)
       	{
         	num_paralog_cn_changes=0;
 					total_copies_prev=0;
 					total_copies=0;
 					for(i=0;i<4;i++)
 					{
-						if(copy_states[k%400][i]!=copy_states[j%400][i])
+						if(copy_states[k%NUM_CN_STATES][i]!=copy_states[j%NUM_CN_STATES][i])
 						{
 							num_paralog_cn_changes++;
-							total_copies_prev+=copy_states[k%400][i];
-							total_copies+=copy_states[j%400][i];
+							total_copies_prev+=copy_states[k%NUM_CN_STATES][i];
+							total_copies+=copy_states[j%NUM_CN_STATES][i];
 						}
 					}
 					if((num_paralog_cn_changes==2)&&(total_copies_prev==total_copies)) //signature of gene conversion, still a single event
@@ -484,28 +495,28 @@ int main(int argc,char*argv[])
           	maxindex_max1=k;
 					}
       	}
-				likelihood_graph[j].state=j%400;
+				likelihood_graph[j].state=j%NUM_CN_STATES;
 				likelihood_graph[j].index=j;
-				likelihood_graph[j].max0=mip_likelihoods[j/400][j%400]+likelihood_graph[j-400].max0;
-				if(max_max0>likelihood_graph[j-400].max1)
+				likelihood_graph[j].max0=mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES]+likelihood_graph[j-NUM_CN_STATES].max0;
+				if(max_max0>likelihood_graph[j-NUM_CN_STATES].max1)
 				{
-					likelihood_graph[j].max1=max_max0+mip_likelihoods[j/400][j%400];
+					likelihood_graph[j].max1=max_max0+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
 					likelihood_graph[j].prev_node_1trans=&(likelihood_graph[maxindex_max0]);
 				}
 				else
 				{
-					likelihood_graph[j].max1=likelihood_graph[j-400].max1+mip_likelihoods[j/400][j%400];
-					likelihood_graph[j].prev_node_1trans=&(likelihood_graph[j-400]);
+					likelihood_graph[j].max1=likelihood_graph[j-NUM_CN_STATES].max1+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
+					likelihood_graph[j].prev_node_1trans=&(likelihood_graph[j-NUM_CN_STATES]);
 				}
-				if(max_max1>likelihood_graph[j-400].max2)
+				if(max_max1>likelihood_graph[j-NUM_CN_STATES].max2)
 				{
-					likelihood_graph[j].max2=max_max1+mip_likelihoods[j/400][j%400];
+					likelihood_graph[j].max2=max_max1+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
         	likelihood_graph[j].prev_node_2trans=&(likelihood_graph[maxindex_max1]);
 				}
 				else
 				{
-					likelihood_graph[j].max2=likelihood_graph[j-400].max2+mip_likelihoods[j/400][j%400];
-        	likelihood_graph[j].prev_node_2trans=&(likelihood_graph[j-400]);
+					likelihood_graph[j].max2=likelihood_graph[j-NUM_CN_STATES].max2+mip_likelihoods[j/NUM_CN_STATES][j%NUM_CN_STATES];
+        	likelihood_graph[j].prev_node_2trans=&(likelihood_graph[j-NUM_CN_STATES]);
 				}
 			}
 			//determine maximum values of final likelihoods allowing 0, 1, and 2 transitions
@@ -513,12 +524,12 @@ int main(int argc,char*argv[])
 			max_max1=-DBL_MAX;
 			max_max2=-DBL_MAX;
 			maxindex_max2=0;
-			for(j=(400*num_mip_targets-400);j<(400*num_mip_targets);j++)
+			for(j=(NUM_CN_STATES*num_mip_targets-NUM_CN_STATES);j<(NUM_CN_STATES*num_mip_targets);j++)
 			{
 				if(likelihood_graph[j].max0>max_max0)
 				{
 					max_max0=likelihood_graph[j].max0;
-					maxindex_max0=j%400; //maximally likely copy number state assuming no internal events
+					maxindex_max0=j%NUM_CN_STATES; //maximally likely copy number state assuming no internal events
 				}
 				if(likelihood_graph[j].max1>max_max1)
 				{
@@ -536,14 +547,14 @@ int main(int argc,char*argv[])
 				//1 transition
 			long first_mip_state2_1trans,state1_1trans,oldstate,oldindex;
 			current=&(likelihood_graph[maxindex_max1]);
-			while((current->index)>=400)
+			while((current->index)>=NUM_CN_STATES)
 			{
 				oldstate=current->state;
 				oldindex=current->index;
 				current=current->prev_node_1trans;
 				if((current->state)!=oldstate)
 				{
-					first_mip_state2_1trans=target_coords[oldindex/400];
+					first_mip_state2_1trans=target_coords[oldindex/NUM_CN_STATES];
 					state1_1trans=current->state;
 					break;
 				}
@@ -569,26 +580,26 @@ int main(int argc,char*argv[])
 					if(trans_made==0)
 					{
 						state2_2trans=current->state;
-						last_mip_state2_2trans=target_coords[(current->index)/400];
+						last_mip_state2_2trans=target_coords[(current->index)/NUM_CN_STATES];
 						trans_made++;
 					}
 					else
 					{
 						state1_2trans=current->state;
-						first_mip_state2_2trans=target_coords[oldindex/400];
+						first_mip_state2_2trans=target_coords[oldindex/NUM_CN_STATES];
 						trans_made++;
 					}
 				}
 			}
 			if(evidence_for_1T)
 			{
-				fprintf(out,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%400][0],copy_states[maxindex_max1%400][1],copy_states[maxindex_max1%400][2],copy_states[maxindex_max1%400][3],first_mip_state2_1trans);
-			fprintf(out2,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%400][0],copy_states[maxindex_max1%400][1],copy_states[maxindex_max1%400][2],copy_states[maxindex_max1%400][3],first_mip_state2_1trans);
+				fprintf(out,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%NUM_CN_STATES][0],copy_states[maxindex_max1%NUM_CN_STATES][1],copy_states[maxindex_max1%NUM_CN_STATES][2],copy_states[maxindex_max1%NUM_CN_STATES][3],first_mip_state2_1trans);
+			fprintf(out2,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%NUM_CN_STATES][0],copy_states[maxindex_max1%NUM_CN_STATES][1],copy_states[maxindex_max1%NUM_CN_STATES][2],copy_states[maxindex_max1%NUM_CN_STATES][3],first_mip_state2_1trans);
       }
 			else
 			{
-				fprintf(out,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%400][0],copy_states[maxindex_max2%400][1],copy_states[maxindex_max2%400][2],copy_states[maxindex_max2%400][3],first_mip_state2_2trans,last_mip_state2_2trans);
-			fprintf(out2,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%400][0],copy_states[maxindex_max2%400][1],copy_states[maxindex_max2%400][2],copy_states[maxindex_max2%400][3],first_mip_state2_2trans,last_mip_state2_2trans);
+				fprintf(out,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%NUM_CN_STATES][0],copy_states[maxindex_max2%NUM_CN_STATES][1],copy_states[maxindex_max2%NUM_CN_STATES][2],copy_states[maxindex_max2%NUM_CN_STATES][3],first_mip_state2_2trans,last_mip_state2_2trans);
+			fprintf(out2,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%NUM_CN_STATES][0],copy_states[maxindex_max2%NUM_CN_STATES][1],copy_states[maxindex_max2%NUM_CN_STATES][2],copy_states[maxindex_max2%NUM_CN_STATES][3],first_mip_state2_2trans,last_mip_state2_2trans);
       }
 		}
 		else
