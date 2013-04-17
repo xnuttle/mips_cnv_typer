@@ -49,7 +49,7 @@ static const int max_length_miptargets_file_field=500;
 static const int max_possible_num_plogs=50;
 static const int max_length_seqname=50;
 static const int max_length_line=5000;
-static const int max_length_filename=50;
+static const int max_length_filename=500;
 static const int trimmed_read_length=76;
 static const int max_length_cigar_md_strs=300;
 static const int wiggle_room=4; //wiggle_room = number of bases actual mapping location can differ from mip target location for a read to be considered to be mapping to a mip target
@@ -298,7 +298,7 @@ int main(int argc,char*argv[])
     int is_base_mm[mip_length];
     char cigar[max_length_cigar_md_strs+1],cigar2[max_length_cigar_md_strs+1];
     char md[max_length_cigar_md_strs+1],md2[max_length_cigar_md_strs+1];
-    char*tab_locations1[num_mrfast_output_fields-1]; //number of tabs is nuber of fields - 1 
+    char*tab_locations1[num_mrfast_output_fields-1]; //number of tabs is number of fields - 1
     char*tab_locations2[num_mrfast_output_fields-1];
 	textfile=fopen(*(argv+3),"r");
 	while(fscanf(textfile,"%s",input_file_name)==1)
