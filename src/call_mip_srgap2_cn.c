@@ -475,10 +475,11 @@ int main(int argc,char*argv[])
 			current=&(likelihood_graph[maxindex_max2]);
 			while(trans_made<2)
 			{
-				if((max_max2-max_max1)==0)
-        {
-          break;
-        }
+                if((max_max2-max_max1)==0)
+                {
+                    break;
+                }
+
 				oldstate=current->state;
 				if(trans_made==0)
 				{
