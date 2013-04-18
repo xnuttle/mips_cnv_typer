@@ -49,12 +49,12 @@
  * simple (a single copy number state across the entirety of the gene).
  */
 
-#include<stdio.h>
-#include<string.h>
-#include<gsl/gsl_randist.h>
-#include<float.h>
-#include<math.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <gsl/gsl_randist.h>
+#include <float.h>
+#include <math.h>
+#include <stdlib.h>
 
 //MAGIC NUMBERS
 //static const int NUM_PLOGS=4; //number of paralogs in gene family
