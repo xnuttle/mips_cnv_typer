@@ -287,10 +287,12 @@ int main(int argc,char*argv[])
 					{
 						if(specificities[i][k]==1)
 						{
+                            // TODO: support multiple copy states in denominator.
 							probs[k]=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
 						}
 						else
 						{
+                            // TODO: support multiple copy states in denominator.
 							probs[k]=0.0;
 							probs[NUM_PLOGS]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
 						}
@@ -303,10 +305,12 @@ int main(int argc,char*argv[])
                     {
                         if(specificities[i][k]==1)
                         {
+                            // TODO: support multiple copy states in denominator.
                             probs[k]=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
                         }
                         else
                         {
+                            // TODO: support multiple copy states in denominator.
                             probs[k]=0.0;
                             probs[NUM_PLOGS]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
                         }
@@ -414,6 +418,7 @@ int main(int argc,char*argv[])
 			}
 		}
 		fprintf(out,"Individual: %s\nL0=%lf L1-L0=%lf L2-L0=%lf\n",individual,max_max0,max_max1-max_max0,max_max2-max_max0);
+        // TODO: support multiple copy states
 		fprintf(out,"Genotype (assuming no internal events): %d%d%d%d\n",copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 		int evidence_for_1T=0,evidence_for_2T=0;
 		long num_mips_state1=0,num_mips_state2=0,num_mips_state3=0;
@@ -510,6 +515,7 @@ int main(int argc,char*argv[])
 			// Print to 2nd output file so you can easily visualize only these individuals.
 			fprintf(out2,"%s\t",individual);
 			fprintf(out2,"L0=%lf L1-L0=%lf L2-L0=%lf\t",max_max0,max_max1-max_max0,max_max2-max_max0);
+            // TODO: support multiple copy states
             fprintf(out2,"Genotype (assuming no internal events): %d%d%d%d\t",copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			fprintf(out3,"%s\t%d\t%d\t%d\t%d\tYES\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			// Setup first column and calculate maximum likelihood value and index of corresponding node.
@@ -667,11 +673,13 @@ int main(int argc,char*argv[])
 			}
 			if(evidence_for_1T)
 			{
+                // TODO: support multiple copy states
 				fprintf(out,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%NUM_CN_STATES][0],copy_states[maxindex_max1%NUM_CN_STATES][1],copy_states[maxindex_max1%NUM_CN_STATES][2],copy_states[maxindex_max1%NUM_CN_STATES][3],first_mip_state2_1trans);
                 fprintf(out2,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%NUM_CN_STATES][0],copy_states[maxindex_max1%NUM_CN_STATES][1],copy_states[maxindex_max1%NUM_CN_STATES][2],copy_states[maxindex_max1%NUM_CN_STATES][3],first_mip_state2_1trans);
             }
 			else
 			{
+                // TODO: support multiple copy states
 				fprintf(out,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%NUM_CN_STATES][0],copy_states[maxindex_max2%NUM_CN_STATES][1],copy_states[maxindex_max2%NUM_CN_STATES][2],copy_states[maxindex_max2%NUM_CN_STATES][3],first_mip_state2_2trans,last_mip_state2_2trans);
                 fprintf(out2,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%NUM_CN_STATES][0],copy_states[maxindex_max2%NUM_CN_STATES][1],copy_states[maxindex_max2%NUM_CN_STATES][2],copy_states[maxindex_max2%NUM_CN_STATES][3],first_mip_state2_2trans,last_mip_state2_2trans);
             }
@@ -679,9 +687,11 @@ int main(int argc,char*argv[])
 		else
 		{
 			fprintf(out,"\n");
+            // TODO: support multiple copy states
 			fprintf(out3,"%s\t%d\t%d\t%d\t%d\tNO\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			if((copy_states[maxindex_max0][0]!=2)||copy_states[maxindex_max0][2]!=2)
 			{
+                // TODO: support multiple copy states
 				printf("\nSRGAP2A/C EVENT DETECTED IN %s!!! Genotype: %d%d%d%d\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			}
 		}
