@@ -82,7 +82,7 @@ int main(int argc,char*argv[])
 	char miptype;
 	char dummy[501];
 	long num_mip_targets=0,num_exon_mips=0;
-	miptargetsfile=fopen(*(argv+1),"r");	
+	miptargetsfile=fopen(*(argv+1),"r");
 	fgetpos(miptargetsfile,&pos);
 	while(fscanf(miptargetsfile,"%s %s %s %c %s %s %s %s %s",dummy,dummy,dummy,&miptype,dummy,dummy,dummy,dummy,dummy)==9)
 	{
@@ -120,7 +120,7 @@ int main(int argc,char*argv[])
   }
 	fclose(miptargetsfile);
 
-	//generate vector of possible SRGAP2 copy number states and vector of ln(prior probabilities) corresponding to each copy number state	
+	//generate vector of possible SRGAP2 copy number states and vector of ln(prior probabilities) corresponding to each copy number state
 	//assume independence of paralog-specific copy number genotypes
 	int A,B,C,D;
   int copy_states[NUM_CN_STATES][NUM_PLOGS];
@@ -270,9 +270,9 @@ int main(int argc,char*argv[])
 					L=MIN_LIKELIHOOD; //minimum log likelihood value for 1 MIP probe arbitrarily assigned to -30
 				}
 				mip_likelihoods[i][j]=L; //[mip_target][copy_state]
-			}	
+			}
 		}
-		
+
 		//use dynamic programming to determine whether the data support more than 1 copy number state across SRGAP2
 		double max_max0=-DBL_MAX,max_max1=-DBL_MAX,max_max2=-DBL_MAX;
     long maxindex_max0,maxindex_max1,maxindex_max2;
@@ -286,7 +286,7 @@ int main(int argc,char*argv[])
       likelihood_graph[j].max2=-DBL_MAX;
 			likelihood_graph[j].prev_node_1trans=NULL;
 			likelihood_graph[j].prev_node_2trans=NULL;
-    }	
+    }
 			//setup all other verticies
 		for(j=NUM_CN_STATES;j<(NUM_CN_STATES*num_mip_targets);j++)
     {
@@ -435,8 +435,8 @@ int main(int argc,char*argv[])
 				}
 			}
 		}
-		
-		
+
+
 		//if there is evidence for possible multiple copy number states across SRGAP2, use dynamic programming to find maximum likelihood paths through likelihood graph, allowing up to 2 transitions (1 internal event)
 		int num_paralog_cn_changes,total_copies_prev,total_copies;
 		if(evidence_for_1T||evidence_for_2T)
@@ -458,7 +458,7 @@ int main(int argc,char*argv[])
 				likelihood_graph[j].max2=-DBL_MAX;
 				likelihood_graph[j].prev_node_1trans=NULL;
 				likelihood_graph[j].prev_node_2trans=NULL;
-			}							
+			}
 			//setup all other verticies
 			for(j=NUM_CN_STATES;j<(NUM_CN_STATES*num_mip_targets);j++)
 			{
