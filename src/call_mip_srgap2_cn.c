@@ -55,8 +55,6 @@
 #include<float.h>
 #include<math.h>
 #include<stdlib.h>
-#define KRED "\x1B[31m"
-#define KYEL "\x1B[33m"
 
 //MAGIC NUMBERS
 //static const int NUM_PLOGS=4; //number of paralogs in gene family
@@ -466,7 +464,7 @@ int main(int argc,char*argv[])
 		if(evidence_for_1T||evidence_for_2T)
 		{
 			//alert user
-			printf(KYEL "\n%s may have a complex genotype!!! Graphically view the data for %s to ensure genotyping accuracy.\n",individual,individual);
+			printf("\n%s may have a complex genotype!!! Graphically view the data for %s to ensure genotyping accuracy.\n",individual,individual);
 			//print to 2nd output file so you can easily visualize only these individuals
 			fprintf(out2,"%s\t",individual);
 			fprintf(out2,"L0=%lf L1-L0=%lf L2-L0=%lf\t",max_max0,max_max1-max_max0,max_max2-max_max0);
@@ -632,7 +630,7 @@ int main(int argc,char*argv[])
 			fprintf(out3,"%s\t%d\t%d\t%d\t%d\tNO\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			if((copy_states[maxindex_max0][0]!=2)||copy_states[maxindex_max0][2]!=2)
 			{
-				printf(KRED "\nSRGAP2A/C EVENT DETECTED IN %s!!! Genotype: %d%d%d%d\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
+				printf("\nSRGAP2A/C EVENT DETECTED IN %s!!! Genotype: %d%d%d%d\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
 			}
 		}
 
