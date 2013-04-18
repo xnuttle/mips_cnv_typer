@@ -2,10 +2,11 @@
 PROGRAMS = mrfast_output_to_mipcounts #detail_mip_targets call_mip_srgap2_cn
 BINARIES = $(addprefix bin/,$(PROGRAMS))
 
+MOD_GSL_DIR = /net/gs/vol3/software/modules-sw/gsl/1.15/Linux/RHEL6/x86_64
 CC = gcc
 DEBUG = -g
-CFLAGS = -Wall -lz -I./iniparser/src
-LFLAGS = -L./iniparser -liniparser
+CFLAGS = -Wall -lz -I./iniparser/src -I$(MOD_GSL_DIR)/include
+LFLAGS = -L./iniparser -liniparser -L$(MOD_GSL_DIR)/lib -lgsl -lgslcblas
 
 all : libraries $(BINARIES)
 
