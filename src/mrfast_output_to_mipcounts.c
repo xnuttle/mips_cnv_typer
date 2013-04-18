@@ -66,9 +66,9 @@ int main(int argc,char*argv[])
 	// Check to make sure there are there are enough command line arguments provided.
 	if(argc<(num_args+1)) //argc includes the program call in its count
  	{
-		printf("Usage: %s <miptargets_file> <individual_barcode_key_file> <text_file_with_names_of_mapping_output_files> <output_file_base_name>\n\n", argv[0]);
-    printf("Example call: %s SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt\n", argv[0]);
-		return 1;
+        printf("Usage: %s <miptargets_file> <individual_barcode_key_file> <text_file_with_names_of_mapping_output_files> <output_file_base_name>\n\n", argv[0]);
+        printf("Example call: %s SRGAP2_RH.miptargets pos_ctrl_indivs.barcodekey mapped_read_files.txt pos_ctrl_expt\n", argv[0]);
+        return 1;
 	}
 
 	// Read in barcode key file and determine barcode length and the number of
