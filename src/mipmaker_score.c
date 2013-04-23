@@ -6,6 +6,15 @@
 //
 //Scoring system: +100 for 1st SUN in a paralog's 112-mer, +20 for 2nd SUN in a paralog's 112-mer, +5 for 3rd SUN in a paralog's 112-mer, +1 for additional SUNs in a paralog's 112-mer
 
+
+//GENERALIZATIONS TO MAKE
+//-allow for a variable number of aligned paralog sequences to be input
+//-allow for aligned paralog sequences > 300 kbp
+//-generate variable number of output files, one for MIP targets distinguishing 1 paralog, one for MIP targets distinguinshing 2 paralogs, ..., one for MIP targets distinguishing N-2 paralogs, and one for MIP targets distinguishing N paralogs
+//-eliminate scoring based on SUNs (separating output files is better than SUN scoring)
+//-eliminate SRGAP2-specific features (such as code related to SRGAP2D internal deletion)
+
+
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
