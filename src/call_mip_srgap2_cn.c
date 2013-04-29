@@ -211,6 +211,13 @@ int main(int argc,char*argv[])
         return 1;
     }
 
+    // Load paralog copy numbers.
+    gsl_vector_int* paralog_copy_numbers = get_paralog_copy_numbers(argv[4]);
+    if (paralog_copy_numbers == NULL) {
+        fprintf(stderr, "Couldn't load paralog copy numbers.\n");
+        return -1;
+    }
+
     // Get information about number of mip targets designed for copy number genotyping.
     FILE*miptargetsfile;
     fpos_t pos;
