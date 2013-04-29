@@ -199,15 +199,15 @@ static const long SRGAP2D_DEL_START=105947; //master sequence base 1 coordinate 
 static const long SRGAP2D_DEL_END=213356; //master sequence base 1 coordinate of SRGAP2D deletion region end
 static const int MIN_LIKELIHOOD_DIFF=40; //see below for detailed description of this heuristic
 static const int MIN_MIPS_IN_CN_STATE=5; //see below for detailed description of this heuristic
-static const int num_args=3; //number of required command line arguments
+static const int num_args=4; //number of required command line arguments
 
 int main(int argc,char*argv[])
 {
     // Check to make sure there are there are enough command line arguments provided.
     if(argc<(num_args+1)) //argc includes the program call in its count
     {
-        printf("Usage: %s miptargets_file mip_read_counts_file output_file_base_name\n\n", argv[0]);
-        printf("Example call: %s SRGAP2_final.miptargets pos_ctrl_expt_SRGAP2_final.mipcounts pos_ctrl_expt\n", argv[0]);
+        printf("Usage: %s miptargets_file mip_read_counts_file output_file_base_name configuration_file\n\n", argv[0]);
+        printf("Example call: %s SRGAP2_final.miptargets pos_ctrl_expt_SRGAP2_final.mipcounts pos_ctrl_expt SRGAP2.conf.ini\n", argv[0]);
         return 1;
     }
 
