@@ -165,11 +165,6 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
 }
 
 //MAGIC NUMBERS
-//static const int NUM_PLOGS=4; //number of paralogs in gene family
-//static const int SRGAP2A_MAX_CN=3; //maximum copy number genotype for SRGAP2A
-//static const int SRGAP2B_MAX_CN=4; //maximum copy number genotype for SRGAP2B
-//static const int SRGAP2C_MAX_CN=3; //maximum copy number genotype for SRGAP2C
-//static const int SRGAP2D_MAX_CN=4; //maximum copy number genotype for SRGAP2D
 #define NUM_PLOGS 4
 #define SRGAP2A_MAX_CN 3
 #define SRGAP2B_MAX_CN 4
