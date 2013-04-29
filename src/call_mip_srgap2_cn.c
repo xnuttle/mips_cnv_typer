@@ -90,6 +90,10 @@ gsl_vector_int* get_paralog_copy_numbers(char* configuration_filename) {
     paralog_keys = iniparser_getseckeys(ini, PARALOG_COUNTS_SECTION);
     printf("Found %i paralogs\n", total_paralogs);
 
+    if (total_paralogs == 0) {
+        return NULL;
+    }
+
     /*
      * Allocate a vector for the paralog copy numbers and populate the vector
      * from the configuration file using the configuration keys.
