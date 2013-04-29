@@ -165,7 +165,6 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
 }
 
 //MAGIC NUMBERS
-#define NUM_PLOGS 4
 #define SRGAP2A_MAX_CN 3
 #define SRGAP2B_MAX_CN 4
 #define SRGAP2C_MAX_CN 3
