@@ -3,7 +3,7 @@
 #include <gsl/gsl_matrix.h>
 #include "iniparser.h"
 
-#define PARALOG_COUNTS_SECTION "paralog_counts"
+#define PARALOG_COUNTS_SECTION "paralog_copy_number_states"
 
 /*
  * Given a configuration file, load the paralog copy number states for all
