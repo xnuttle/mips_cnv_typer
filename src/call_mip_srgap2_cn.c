@@ -367,7 +367,7 @@ int main(int argc,char*argv[])
     long coord,mip_coord;
     double probs[number_of_paralogs+1];
     double L;
-    long k;
+    long k, p;
     double mip_likelihoods[num_mip_targets][NUM_CN_STATES];
     individual[30]='\0';
     countsfile=fopen(*(argv+2),"r");
@@ -438,9 +438,13 @@ int main(int argc,char*argv[])
                     }
                 }
 
-                // TODO: replace unsigned int array with a vector.
-                const unsigned int countvec[NUM_PLOGS + 1]={indiv_counts[i][0],indiv_counts[i][1],indiv_counts[i][2],indiv_counts[i][3],indiv_counts[i][4]};
-                L=gsl_ran_multinomial_lnpdf(paralog_copy_numbers->size + 1,probs,countvec);
+                // Initialize countvec.
+                unsigned int countvec[number_of_paralogs + 1];
+                for (p = 0; p < number_of_paralogs + 1; p++) {
+                    countvec[p] = indiv_counts[i][p];
+                }
+
+                L=gsl_ran_multinomial_lnpdf(number_of_paralogs + 1,probs,countvec);
                 if(L<MIN_LIKELIHOOD)
                 {
                     // Minimum log likelihood value for 1 MIP probe arbitrarily assigned to -30.
