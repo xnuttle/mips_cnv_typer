@@ -217,6 +217,8 @@ int main(int argc,char*argv[])
         return -1;
     }
 
+    int number_of_paralogs = (int)paralog_copy_numbers->size;
+
     // Get information about number of mip targets designed for copy number genotyping.
     FILE*miptargetsfile;
     fpos_t pos;
@@ -239,12 +241,12 @@ int main(int argc,char*argv[])
     fsetpos(miptargetsfile,&pos);
 
     // Get and store information about SRGAP2 master sequence target coordinate and specificity for each MIP.
-    char spec_string[paralog_copy_numbers->size];
+    char spec_string[number_of_paralogs];
     // A string to hold either 0 or 1 (a MIP either has or lacks specificity for a given paralog).
     char spec[2];
     long start,end;
     long target_coords[num_mip_targets];
-    long specificities[num_mip_targets][paralog_copy_numbers->size];
+    long specificities[num_mip_targets][number_of_paralogs];
     long i=0,j;
     spec[1]='\0';
     while(fscanf(miptargetsfile,"%s %ld %c %ld %s %c %s %s %s %s %s",dummy,&start,&miptype,&end,dummy,&miptype,dummy,dummy,spec_string,dummy,dummy)==11)
@@ -252,7 +254,7 @@ int main(int argc,char*argv[])
         if(miptype!='E')
         {
             target_coords[i]=(start+end)/2;
-            for(j=0;j<paralog_copy_numbers->size;j++)
+            for(j=0;j<number_of_paralogs;j++)
             {
                 spec[0]=spec_string[j];
                 specificities[i][j]=strtol(spec,NULL,10);
@@ -268,7 +270,7 @@ int main(int argc,char*argv[])
      * independence of paralog-specific copy number genotypes
      */
     int A,B,C,D;
-    int copy_states[NUM_CN_STATES][paralog_copy_numbers->size];
+    int copy_states[NUM_CN_STATES][number_of_paralogs];
     // Vector of prior probabilities for each copy number state.
     double priors[NUM_CN_STATES];
 
@@ -360,10 +362,10 @@ int main(int argc,char*argv[])
     // For each individual, read in counts, calculate and store individual likelihoods of data for each MIP under each copy number state.
     FILE*countsfile;
     char individual[31];
-    long counts[paralog_copy_numbers->size+1];
-    long indiv_counts[num_mip_targets][paralog_copy_numbers->size+1];
+    long counts[number_of_paralogs+1];
+    long indiv_counts[num_mip_targets][number_of_paralogs+1];
     long coord,mip_coord;
-    double probs[paralog_copy_numbers->size+1];
+    double probs[number_of_paralogs+1];
     double L;
     long k;
     double mip_likelihoods[num_mip_targets][NUM_CN_STATES];
@@ -384,7 +386,7 @@ int main(int argc,char*argv[])
             fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&mip_coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]));
             if(miptype!='E')
             {
-                for(k=0;k<(paralog_copy_numbers->size+1);k++)
+                for(k=0;k<(number_of_paralogs+1);k++)
                 {
                     indiv_counts[j][k]=counts[k];
                 }
@@ -397,12 +399,12 @@ int main(int argc,char*argv[])
         {
             for(j=0;j<NUM_CN_STATES;j++)
             {
-                probs[paralog_copy_numbers->size]=0.0;
+                probs[number_of_paralogs]=0.0;
                 // MIP not in SRGAP2D deletion region
                 // TODO: remove this SRGAP2-specific code.
                 if((target_coords[i]<SRGAP2D_DEL_START)||(target_coords[i]>SRGAP2D_DEL_END))
                 {
-                    for(k=0;k<paralog_copy_numbers->size;k++)
+                    for(k=0;k<number_of_paralogs;k++)
                     {
                         if(specificities[i][k]==1)
                         {
@@ -413,14 +415,14 @@ int main(int argc,char*argv[])
                         {
                             // TODO: support multiple copy states in denominator.
                             probs[k]=0.0;
-                            probs[paralog_copy_numbers->size]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
+                            probs[number_of_paralogs]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
                         }
                     }
                 }
                 else
                 {
-                    probs[paralog_copy_numbers->size-1]=0.0;
-                    for(k=0;k<(paralog_copy_numbers->size-1);k++)
+                    probs[number_of_paralogs-1]=0.0;
+                    for(k=0;k<(number_of_paralogs-1);k++)
                     {
                         if(specificities[i][k]==1)
                         {
@@ -431,7 +433,7 @@ int main(int argc,char*argv[])
                         {
                             // TODO: support multiple copy states in denominator.
                             probs[k]=0.0;
-                            probs[paralog_copy_numbers->size]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
+                            probs[number_of_paralogs]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
                         }
                     }
                 }
