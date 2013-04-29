@@ -114,6 +114,10 @@ int main(int argc, char*argv[]) {
 
     // Load paralog copy numbers.
     paralog_copy_numbers = get_paralog_copy_numbers(argv[1]);
+    if (paralog_copy_numbers == NULL) {
+        fprintf(stderr, "Couldn't load paralog copy numbers.\n");
+        return -1;
+    }
 
     // Populate copy states matrix.
     matrix = populate_matrix(paralog_copy_numbers->size, paralog_copy_numbers);
