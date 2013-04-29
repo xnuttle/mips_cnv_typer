@@ -240,12 +240,12 @@ int main(int argc,char*argv[])
     fsetpos(miptargetsfile,&pos);
 
     // Get and store information about SRGAP2 master sequence target coordinate and specificity for each MIP.
-    char spec_string[NUM_PLOGS];
+    char spec_string[paralog_copy_numbers->size];
     // A string to hold either 0 or 1 (a MIP either has or lacks specificity for a given paralog).
     char spec[2];
     long start,end;
     long target_coords[num_mip_targets];
-    long specificities[num_mip_targets][NUM_PLOGS];
+    long specificities[num_mip_targets][paralog_copy_numbers->size];
     long i=0,j;
     spec[1]='\0';
     while(fscanf(miptargetsfile,"%s %ld %c %ld %s %c %s %s %s %s %s",dummy,&start,&miptype,&end,dummy,&miptype,dummy,dummy,spec_string,dummy,dummy)==11)
@@ -253,7 +253,7 @@ int main(int argc,char*argv[])
         if(miptype!='E')
         {
             target_coords[i]=(start+end)/2;
-            for(j=0;j<NUM_PLOGS;j++)
+            for(j=0;j<paralog_copy_numbers->size;j++)
             {
                 spec[0]=spec_string[j];
                 specificities[i][j]=strtol(spec,NULL,10);
@@ -269,7 +269,7 @@ int main(int argc,char*argv[])
      * independence of paralog-specific copy number genotypes
      */
     int A,B,C,D;
-    int copy_states[NUM_CN_STATES][NUM_PLOGS];
+    int copy_states[NUM_CN_STATES][paralog_copy_numbers->size];
     // Vector of prior probabilities for each copy number state.
     double priors[NUM_CN_STATES];
 
@@ -361,10 +361,10 @@ int main(int argc,char*argv[])
     // For each individual, read in counts, calculate and store individual likelihoods of data for each MIP under each copy number state.
     FILE*countsfile;
     char individual[31];
-    long counts[NUM_PLOGS+1];
-    long indiv_counts[num_mip_targets][NUM_PLOGS+1];
+    long counts[paralog_copy_numbers->size+1];
+    long indiv_counts[num_mip_targets][paralog_copy_numbers->size+1];
     long coord,mip_coord;
-    double probs[NUM_PLOGS+1];
+    double probs[paralog_copy_numbers->size+1];
     double L;
     long k;
     double mip_likelihoods[num_mip_targets][NUM_CN_STATES];
@@ -385,7 +385,7 @@ int main(int argc,char*argv[])
             fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&mip_coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]));
             if(miptype!='E')
             {
-                for(k=0;k<(NUM_PLOGS+1);k++)
+                for(k=0;k<(paralog_copy_numbers->size+1);k++)
                 {
                     indiv_counts[j][k]=counts[k];
                 }
@@ -398,12 +398,12 @@ int main(int argc,char*argv[])
         {
             for(j=0;j<NUM_CN_STATES;j++)
             {
-                probs[NUM_PLOGS]=0.0;
+                probs[paralog_copy_numbers->size]=0.0;
                 // MIP not in SRGAP2D deletion region
                 // TODO: remove this SRGAP2-specific code.
                 if((target_coords[i]<SRGAP2D_DEL_START)||(target_coords[i]>SRGAP2D_DEL_END))
                 {
-                    for(k=0;k<NUM_PLOGS;k++)
+                    for(k=0;k<paralog_copy_numbers->size;k++)
                     {
                         if(specificities[i][k]==1)
                         {
@@ -414,14 +414,14 @@ int main(int argc,char*argv[])
                         {
                             // TODO: support multiple copy states in denominator.
                             probs[k]=0.0;
-                            probs[NUM_PLOGS]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
+                            probs[paralog_copy_numbers->size]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
                         }
                     }
                 }
                 else
                 {
-                    probs[NUM_PLOGS-1]=0.0;
-                    for(k=0;k<(NUM_PLOGS-1);k++)
+                    probs[paralog_copy_numbers->size-1]=0.0;
+                    for(k=0;k<(paralog_copy_numbers->size-1);k++)
                     {
                         if(specificities[i][k]==1)
                         {
@@ -432,12 +432,14 @@ int main(int argc,char*argv[])
                         {
                             // TODO: support multiple copy states in denominator.
                             probs[k]=0.0;
-                            probs[NUM_PLOGS]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
+                            probs[paralog_copy_numbers->size]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
                         }
                     }
                 }
-                const unsigned int countvec[NUM_PLOGS+1]={indiv_counts[i][0],indiv_counts[i][1],indiv_counts[i][2],indiv_counts[i][3],indiv_counts[i][4]};
-                L=gsl_ran_multinomial_lnpdf(NUM_PLOGS+1,probs,countvec);
+
+                // TODO: replace unsigned int array with a vector.
+                const unsigned int countvec[NUM_PLOGS + 1]={indiv_counts[i][0],indiv_counts[i][1],indiv_counts[i][2],indiv_counts[i][3],indiv_counts[i][4]};
+                L=gsl_ran_multinomial_lnpdf(paralog_copy_numbers->size + 1,probs,countvec);
                 if(L<MIN_LIKELIHOOD)
                 {
                     // Minimum log likelihood value for 1 MIP probe arbitrarily assigned to -30.
