@@ -68,8 +68,6 @@
 // Parameter setting the minimum likelihood value for a single data point
 #define MIN_LIKELIHOOD -30
 
-static const long SRGAP2D_DEL_START=105947; //master sequence base 1 coordinate of SRGAP2D deletion region start
-static const long SRGAP2D_DEL_END=213356; //master sequence base 1 coordinate of SRGAP2D deletion region end
 static const int MIN_LIKELIHOOD_DIFF=40; //see below for detailed description of this heuristic
 static const int MIN_MIPS_IN_CN_STATE=5; //see below for detailed description of this heuristic
 static const int num_args=4; //number of required command line arguments
@@ -480,42 +478,16 @@ int main(int argc,char*argv[])
                 }
 
                 probs[number_of_paralogs]=0.0;
-                // MIP not in SRGAP2D deletion region
-                // TODO: remove this SRGAP2-specific code.
-                if((target_coords[i]<SRGAP2D_DEL_START)||(target_coords[i]>SRGAP2D_DEL_END))
+                for(k=0;k<number_of_paralogs;k++)
                 {
-                    for(k=0;k<number_of_paralogs;k++)
+                    if(specificities[i][k]==1)
                     {
-                        if(specificities[i][k]==1)
-                        {
-                            probs[k]=(double)(copy_states[j][k]) / sum_of_copy_states;
-                        }
-                        else
-                        {
-                            probs[k]=0.0;
-                            probs[number_of_paralogs]+=(double)(copy_states[j][k]) / sum_of_copy_states;
-                        }
+                        probs[k]=(double)(copy_states[j][k]) / sum_of_copy_states;
                     }
-                }
-                else
-                {
-                    sum_of_copy_states = 0;
-                    for (k = 0; k < number_of_paralogs - 1; k++) {
-                        sum_of_copy_states = sum_of_copy_states + (double)copy_states[j][k];
-                    }
-
-                    probs[number_of_paralogs-1]=0.0;
-                    for(k=0;k<(number_of_paralogs-1);k++)
+                    else
                     {
-                        if(specificities[i][k]==1)
-                        {
-                            probs[k]=(double)(copy_states[j][k]) / sum_of_copy_states;
-                        }
-                        else
-                        {
-                            probs[k]=0.0;
-                            probs[number_of_paralogs]+=(double)(copy_states[j][k]) / sum_of_copy_states;
-                        }
+                        probs[k]=0.0;
+                        probs[number_of_paralogs]+=(double)(copy_states[j][k]) / sum_of_copy_states;
                     }
                 }
 
