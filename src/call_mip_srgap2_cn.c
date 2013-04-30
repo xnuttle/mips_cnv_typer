@@ -64,7 +64,7 @@
 #define PARALOG_COUNTS_SECTION "paralog_copy_number_states"
 
 /*
- * Given a point to an iniparser instance, load the paralog copy number states
+ * Given a pointer to an iniparser instance, load the paralog copy number states
  * for all paralogs into a vector.
  */
 gsl_vector_int* get_paralog_copy_numbers(dictionary* ini) {
