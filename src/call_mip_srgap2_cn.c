@@ -428,12 +428,14 @@ int main(int argc,char*argv[])
     fgetpos(countsfile,&pos);
 
     // While there remains data to process, process.
+    // TODO: replace hardcoded paralog counts with dynamic values.
     while(fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]))==9)
     {
         fsetpos(countsfile,&pos);
         j=0;
         for(i=0;i<(num_mip_targets+num_exon_mips);i++)
         {
+            // TODO: replace hardcoded paralog counts with dynamic values.
             fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&mip_coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]));
             if(miptype!='E')
             {
