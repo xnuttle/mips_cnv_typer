@@ -271,20 +271,21 @@ int main(int argc,char*argv[])
         number_of_copy_states = number_of_copy_states * gsl_vector_int_get(paralog_copy_numbers, i);
     }
 
-    // Load paralog priors.
+    /*
+     * Load paralog priors. Priors give the probabilities of observing a copy
+     * number state of 0,1,2,3...n. for each paralog. These probabilities are
+     * based on empirical data from screening and genotyping efforts.
+     *
+     * Extremely unlikely states (never observed so far but hypothetically
+     * possible) are arbitrarily assigned a value with a resulting natural
+     * logarithm of -30.
+     */
     gsl_vector* priors_by_paralog[number_of_paralogs];
     for (i = 0; i < number_of_paralogs; i++) {
         priors_by_paralog[i] = get_paralog_priors(ini, i, gsl_vector_int_get(paralog_copy_numbers, i));
         if (priors_by_paralog[i] == NULL) {
             fprintf(stderr, "Couldn't load priors for paralog %ld.\n", i);
             return -1;
-        }
-    }
-
-    // Free memory allocated for paralog prior vectors.
-    for (i = 0; i < number_of_paralogs; i++) {
-        if (priors_by_paralog[i] != NULL) {
-            gsl_vector_free(priors_by_paralog[i]);
         }
     }
 
@@ -346,19 +347,6 @@ int main(int argc,char*argv[])
     double priors[number_of_copy_states];
 
     /*
-     * Priors_N gives the probabilities of observing a copy number state of
-     * 0,1,2,3,... for SRGAP2N these probabilities are based on empirical data
-     * from all SRGAP2 duplication/deletion screening and genotyping efforts
-     * extremely unlikely states (never observed so far but hypothetically
-     * possible) are arbitrarily assigned a value with a resulting natural
-     * logarithm of -30
-     */
-    double priors_A[SRGAP2A_MAX_CN+1]={SRGAP2A_FREQ_0,SRGAP2A_FREQ_1,SRGAP2A_FREQ_2,SRGAP2A_FREQ_3};
-    double priors_B[SRGAP2B_MAX_CN+1]={SRGAP2B_FREQ_0,SRGAP2B_FREQ_1,SRGAP2B_FREQ_2,SRGAP2B_FREQ_3,SRGAP2B_FREQ_4};
-    double priors_C[SRGAP2C_MAX_CN+1]={SRGAP2C_FREQ_0,SRGAP2C_FREQ_1,SRGAP2C_FREQ_2,SRGAP2C_FREQ_3}; //the 3 Signature Genomics cases genotyped by MIPs are included in denominator
-    double priors_D[SRGAP2D_MAX_CN+1]={SRGAP2D_FREQ_0,SRGAP2D_FREQ_1,SRGAP2D_FREQ_2,SRGAP2D_FREQ_3,SRGAP2D_FREQ_4}; //all SRGAP2D genotyping is from manual inspection of MIP data, Troina individual omitted
-
-    /*
      * Populate copy number states into a matrix to allow dynamic configuration
      * of paralogs. Load results into the copy states array to maintain a
      * consistent interface in the following code.
@@ -381,10 +369,21 @@ int main(int argc,char*argv[])
     /*
      * Initialize prior probabilities.
      */
+    double prior;
     for (i = 0; i < number_of_copy_states; i++) {
-        // TODO: replace hard-coded number of paralogs with a matrix of priors.
-        priors[i] = log(priors_A[copy_states[i][0]]) + log(priors_B[copy_states[i][1]]) + log(priors_C[copy_states[i][2]]) + log(priors_D[copy_states[i][3]]);
-        printf("Set prior to: %.2f\n", priors[i]);
+        prior = 0;
+        for (j = 0; j < number_of_paralogs; j++) {
+            prior = prior + log(gsl_vector_get(priors_by_paralog[j], copy_states[i][j]));
+        }
+
+        priors[i] = prior;
+    }
+
+    // Free memory allocated for paralog prior vectors.
+    for (i = 0; i < number_of_paralogs; i++) {
+        if (priors_by_paralog[i] != NULL) {
+            gsl_vector_free(priors_by_paralog[i]);
+        }
     }
 
     /*
