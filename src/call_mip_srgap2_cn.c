@@ -292,24 +292,26 @@ int main(int argc,char*argv[])
     double priors_D[SRGAP2D_MAX_CN+1]={SRGAP2D_FREQ_0,SRGAP2D_FREQ_1,SRGAP2D_FREQ_2,SRGAP2D_FREQ_3,SRGAP2D_FREQ_4}; //all SRGAP2D genotyping is from manual inspection of MIP data, Troina individual omitted
 
     // TODO: Replace nested for loops with structure that can handle variable number of paralogs.
-    i=0;
-    for(A=0;A<=SRGAP2A_MAX_CN;A++)
-    {
-        for(B=0;B<=SRGAP2B_MAX_CN;B++)
-        {
-            for(C=0;C<=SRGAP2C_MAX_CN;C++)
-            {
-                for(D=0;D<=SRGAP2D_MAX_CN;D++)
-                {
-                    copy_states[i][0]=A;
-                    copy_states[i][1]=B;
-                    copy_states[i][2]=C;
-                    copy_states[i][3]=D;
-                    priors[i]=log(priors_A[A])+log(priors_B[B])+log(priors_C[C])+log(priors_D[D]);
-                    i++;
-                }
-            }
+
+    gsl_matrix_int* matrix = populate_matrix(number_of_paralogs, paralog_copy_numbers);
+    for (i = 0; i < (int)matrix->size1; i++) {
+        for (j = 0; j < (int)matrix->size2; j++) {
+            copy_states[i][j] = gsl_matrix_int_get(matrix, i, j);
         }
+    }
+
+    if (matrix != NULL) {
+        printf("Freeing final matrix\n");
+        gsl_matrix_int_free(matrix);
+    }
+
+    /*
+     * Initialize prior probabilities.
+     */
+    for (i = 0; i < number_of_copy_states; i++) {
+        // TODO: replace hard-coded number of paralogs with a matrix of priors.
+        priors[i] = log(priors_A[copy_states[i][0]]) + log(priors_B[copy_states[i][1]]) + log(priors_C[copy_states[i][2]]) + log(priors_D[copy_states[i][3]]);
+        printf("Set prior to: %.2f\n", priors[i]);
     }
 
     /*
