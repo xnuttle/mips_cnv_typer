@@ -261,10 +261,10 @@ int main(int argc,char*argv[])
     }
 
     // Load paralog priors.
-    gsl_vector* new_priors[number_of_paralogs];
+    gsl_vector* priors_by_paralog[number_of_paralogs];
     for (i = 0; i < number_of_paralogs; i++) {
-        new_priors[i] = get_paralog_priors(ini, i, gsl_vector_int_get(paralog_copy_numbers, i));
-        if (new_priors[i] == NULL) {
+        priors_by_paralog[i] = get_paralog_priors(ini, i, gsl_vector_int_get(paralog_copy_numbers, i));
+        if (priors_by_paralog[i] == NULL) {
             fprintf(stderr, "Couldn't load priors for paralog %ld.\n", i);
             return -1;
         }
@@ -272,8 +272,8 @@ int main(int argc,char*argv[])
 
     // Free memory allocated for paralog prior vectors.
     for (i = 0; i < number_of_paralogs; i++) {
-        if (new_priors[i] != NULL) {
-            gsl_vector_free(new_priors[i]);
+        if (priors_by_paralog[i] != NULL) {
+            gsl_vector_free(priors_by_paralog[i]);
         }
     }
 
