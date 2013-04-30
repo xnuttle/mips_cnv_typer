@@ -271,7 +271,10 @@ int main(int argc,char*argv[])
     }
     fsetpos(miptargetsfile,&pos);
 
-    // Get and store information about SRGAP2 master sequence target coordinate and specificity for each MIP.
+    /*
+     * Get and store information about the gene family's master sequence target
+     * coordinate and specificity for each MIP.
+     */
     char spec_string[number_of_paralogs];
     // A string to hold either 0 or 1 (a MIP either has or lacks specificity for a given paralog).
     char spec[2];
@@ -296,8 +299,8 @@ int main(int argc,char*argv[])
     fclose(miptargetsfile);
 
     /*
-     * Generate vector of possible SRGAP2 copy number states and vector of
-     * ln(prior probabilities) corresponding to each copy number state assume
+     * Generate vector of possible copy number states and vector of ln(prior
+     * probabilities) corresponding to each copy number state assume
      * independence of paralog-specific copy number genotypes
      */
     int copy_states[number_of_copy_states][number_of_paralogs];
@@ -533,7 +536,10 @@ int main(int argc,char*argv[])
             }
         }
 
-        // Use dynamic programming to determine whether the data support more than 1 copy number state across SRGAP2.
+        /*
+         * Use dynamic programming to determine whether the data support more
+         * than 1 copy number state across the gene family.
+         */
         double max_max0=-DBL_MAX,max_max1=-DBL_MAX,max_max2=-DBL_MAX;
         long maxindex_max0,maxindex_max1,maxindex_max2;
 
@@ -598,7 +604,7 @@ int main(int argc,char*argv[])
         /*
          * Determine maximum values of final likelihoods allowing 0, 1, and 2
          * transitions and use to determine whether there may be multiple
-         * underlying copy number states across SRGAP2.
+         * underlying copy number states across the gene family.
          */
         max_max0=-DBL_MAX;
         max_max1=-DBL_MAX;
@@ -717,9 +723,9 @@ int main(int argc,char*argv[])
 
         /*
          * If there is evidence for possible multiple copy number states across
-         * SRGAP2, use dynamic programming to find maximum likelihood paths
-         * through likelihood graph, allowing up to 2 transitions (1 internal
-         * event).
+         * the gene family, use dynamic programming to find maximum likelihood
+         * paths through likelihood graph, allowing up to 2 transitions (1
+         * internal event).
          */
         int num_paralog_cn_changes,total_copies_prev,total_copies;
         if(evidence_for_1T||evidence_for_2T)
