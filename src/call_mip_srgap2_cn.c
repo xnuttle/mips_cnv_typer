@@ -303,8 +303,11 @@ int main(int argc,char*argv[])
         }
     }
 
+    /*
+     * Free memory allocated for the matrix now that its contents have been
+     * copied into the copy states array.
+     */
     if (matrix != NULL) {
-        printf("Freeing final matrix\n");
         gsl_matrix_int_free(matrix);
     }
 
