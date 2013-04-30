@@ -169,6 +169,7 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
 #define SRGAP2B_MAX_CN 4
 #define SRGAP2C_MAX_CN 3
 #define SRGAP2D_MAX_CN 4
+
 // Parameter setting the minimum likelihood value for a single data point
 #define MIN_LIKELIHOOD -30
 #define SRGAP2A_FREQ_0 exp(MIN_LIKELIHOOD)
