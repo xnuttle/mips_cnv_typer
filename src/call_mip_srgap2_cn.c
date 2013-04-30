@@ -64,23 +64,13 @@
 #define PARALOG_COUNTS_SECTION "paralog_copy_number_states"
 
 /*
- * Given a configuration file, load the paralog copy number states for all
- * paralogs into a vector.
+ * Given a point to an iniparser instance, load the paralog copy number states
+ * for all paralogs into a vector.
  */
-gsl_vector_int* get_paralog_copy_numbers(char* configuration_filename) {
+gsl_vector_int* get_paralog_copy_numbers(dictionary* ini) {
     gsl_vector_int* paralog_copy_numbers = NULL;
-    dictionary* ini;
     int total_paralogs, i;
     char** paralog_keys;
-
-    /*
-     * Load the configuration file.
-     */
-    ini = iniparser_load(configuration_filename);
-    if (ini == NULL) {
-        fprintf(stderr, "Cannot open configuration file: %s\n", configuration_filename);
-        return NULL;
-    }
 
     /*
      * Get total number of paralogs defined in the configuration file and keys
@@ -103,8 +93,6 @@ gsl_vector_int* get_paralog_copy_numbers(char* configuration_filename) {
         gsl_vector_int_set(paralog_copy_numbers, i, iniparser_getint(ini, paralog_keys[i], -1));
         printf("Paralog %i: %i\n", i, gsl_vector_int_get(paralog_copy_numbers, i));
     }
-
-    iniparser_freedict(ini);
 
     return paralog_copy_numbers;
 }
@@ -210,12 +198,25 @@ int main(int argc,char*argv[])
         return 1;
     }
 
-    // Load paralog copy numbers.
-    gsl_vector_int* paralog_copy_numbers = get_paralog_copy_numbers(argv[4]);
-    if (paralog_copy_numbers == NULL) {
-        fprintf(stderr, "Couldn't load paralog copy numbers.\n");
+    /*
+     * Load the configuration file.
+     */
+    dictionary* ini;
+    ini = iniparser_load(argv[4]);
+    if (ini == NULL) {
+        fprintf(stderr, "Cannot open configuration file: %s\n", argv[4]);
         return -1;
     }
+
+    // Load paralog copy numbers.
+    gsl_vector_int* paralog_copy_numbers = get_paralog_copy_numbers(ini);
+    if (paralog_copy_numbers == NULL) {
+        fprintf(stderr, "Couldn't load paralog copy numbers.\n");
+        iniparser_freedict(ini);
+        return -1;
+    }
+
+    iniparser_freedict(ini);
 
     int number_of_paralogs = (int)paralog_copy_numbers->size;
     int number_of_copy_states = 1;
