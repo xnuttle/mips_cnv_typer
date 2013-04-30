@@ -728,9 +728,16 @@ int main(int argc,char*argv[])
             // Print to 2nd output file so you can easily visualize only these individuals.
             fprintf(out2,"%s\t",individual);
             fprintf(out2,"L0=%lf L1-L0=%lf L2-L0=%lf\t",max_max0,max_max1-max_max0,max_max2-max_max0);
-            // TODO: support multiple copy states
-            fprintf(out2,"Genotype (assuming no internal events): %d%d%d%d\t",copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
-            fprintf(out3,"%s\t%d\t%d\t%d\t%d\tYES\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
+
+            fprintf(out2, "Genotype (assuming no internal events): ");
+            fprintf(out3, "%s", individual);
+            for (i = 0; i < number_of_paralogs; i++) {
+                fprintf(out2, "%d", copy_states[maxindex_max0][i]);
+                fprintf(out3, "\t%d", copy_states[maxindex_max0][i]);
+            }
+            fprintf(out2, "\t");
+            fprintf(out3, "\tYES\n");
+
             // Setup first column and calculate maximum likelihood value and index of corresponding node.
             for(j=0;j<number_of_copy_states;j++)
             {
