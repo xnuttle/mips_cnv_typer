@@ -633,8 +633,12 @@ int main(int argc,char*argv[])
             }
         }
         fprintf(out,"Individual: %s\nL0=%lf L1-L0=%lf L2-L0=%lf\n",individual,max_max0,max_max1-max_max0,max_max2-max_max0);
-        // TODO: support multiple copy states
-        fprintf(out,"Genotype (assuming no internal events): %d%d%d%d\n",copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
+        fprintf(out,"Genotype (assuming no internal events): ");
+        for (i = 0; i < number_of_paralogs; i++) {
+            fprintf(out, "%d", copy_states[maxindex_max0][i]);
+        }
+        fprintf(out, "\n");
+
         int evidence_for_1T=0,evidence_for_2T=0;
         long num_mips_state1=0,num_mips_state2=0,num_mips_state3=0;
         struct node*current;
