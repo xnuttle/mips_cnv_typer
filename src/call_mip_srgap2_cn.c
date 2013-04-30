@@ -291,8 +291,11 @@ int main(int argc,char*argv[])
     double priors_C[SRGAP2C_MAX_CN+1]={SRGAP2C_FREQ_0,SRGAP2C_FREQ_1,SRGAP2C_FREQ_2,SRGAP2C_FREQ_3}; //the 3 Signature Genomics cases genotyped by MIPs are included in denominator
     double priors_D[SRGAP2D_MAX_CN+1]={SRGAP2D_FREQ_0,SRGAP2D_FREQ_1,SRGAP2D_FREQ_2,SRGAP2D_FREQ_3,SRGAP2D_FREQ_4}; //all SRGAP2D genotyping is from manual inspection of MIP data, Troina individual omitted
 
-    // TODO: Replace nested for loops with structure that can handle variable number of paralogs.
-
+    /*
+     * Populate copy number states into a matrix to allow dynamic configuration
+     * of paralogs. Load results into the copy states array to maintain a
+     * consistent interface in the following code.
+     */
     gsl_matrix_int* matrix = populate_matrix(number_of_paralogs, paralog_copy_numbers);
     for (i = 0; i < (int)matrix->size1; i++) {
         for (j = 0; j < (int)matrix->size2; j++) {
