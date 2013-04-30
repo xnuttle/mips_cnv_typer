@@ -434,8 +434,11 @@ int main(int argc,char*argv[])
     strcat(output_base_name,ext3);
     out3=fopen(output_base_name,"w");
 
-    // TODO: replace hardcoded paralog number with code for variable paralogs.
-    fprintf(out3,"Individual\tSRGAP2A_CN\tSRGAP2B_CN\tSRGAP2C_CN\tSRGAP2D_CN\tPossible_Complex_CN_Genotype\n");
+    fprintf(out3,"Individual");
+    for (i = 0; i < number_of_paralogs; i++) {
+        fprintf(out3, "\tParalog%ld_CN", i);
+    }
+    fprintf(out3, "\tPossible_Complex_CN_Genotype\n");
 
     // For each individual, read in counts, calculate and store individual likelihoods of data for each MIP under each copy number state.
     FILE*countsfile;
