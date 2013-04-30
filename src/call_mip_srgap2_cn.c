@@ -102,7 +102,6 @@ gsl_vector_int* get_paralog_copy_numbers(dictionary* ini) {
     paralog_copy_numbers = gsl_vector_int_alloc(total_paralogs);
     for (i = 0; i < total_paralogs; i++) {
         gsl_vector_int_set(paralog_copy_numbers, i, iniparser_getint(ini, paralog_keys[i], -1));
-        printf("Paralog %i: %i\n", i, gsl_vector_int_get(paralog_copy_numbers, i));
     }
 
     return paralog_copy_numbers;
@@ -120,7 +119,6 @@ gsl_vector* get_paralog_priors(dictionary* ini, int paralog, int paralog_copy_st
     gsl_vector* priors;
 
     sprintf(section, "priors_paralog%i", paralog);
-    printf("Looking for section: %s\n", section);
 
     paralog_keys = iniparser_getseckeys(ini, section);
     if (paralog_keys == NULL) {
@@ -128,8 +126,6 @@ gsl_vector* get_paralog_priors(dictionary* ini, int paralog, int paralog_copy_st
     }
 
     total = iniparser_getdouble(ini, paralog_keys[0], -1);
-    printf("Found paralog %i total: %f\n", paralog, total);
-
     priors = gsl_vector_alloc(paralog_copy_states);
 
     for (i = 0; i < paralog_copy_states; i++) {
@@ -138,14 +134,12 @@ gsl_vector* get_paralog_priors(dictionary* ini, int paralog, int paralog_copy_st
         // Don't let prior values equal 0 for statistical reasons.
         if (prior == 0) {
             prior = exp(MIN_LIKELIHOOD);
-            printf("Set prior to min likelihood.\n");
         }
         else {
             prior = prior / total;
         }
 
         gsl_vector_set(priors, i, prior);
-        printf("paralog%i_prior%i: %f\n", paralog, i, gsl_vector_get(priors, i));
     }
 
     return priors;
@@ -160,10 +154,7 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
     int i, j, k;
     gsl_matrix_int* matrix;
 
-    printf("n=%i (CN: %i)\n", n, gsl_vector_int_get(x, n - 1));
-
     if (n == 1) {
-        printf("Allocate matrix (%i x %i)\n", gsl_vector_int_get(x, n - 1), n);
         matrix = gsl_matrix_int_alloc(gsl_vector_int_get(x, n - 1), n);
 
         for (i=0; i < gsl_vector_int_get(x, n - 1); i++) {
@@ -173,9 +164,6 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
     else {
         gsl_matrix_int* previous_matrix = populate_matrix(n-1, x);
         int previous_rows = (int)previous_matrix->size1;
-        printf("Previous matrix had %i rows\n", previous_rows);
-
-        printf("Allocate matrix (%i x %i)\n", previous_rows*gsl_vector_int_get(x, n - 1), n);
         matrix = gsl_matrix_int_alloc(previous_rows*gsl_vector_int_get(x, n - 1), n);
 
         /*
@@ -199,7 +187,6 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
             }
         }
 
-        printf("Freeing previous matrix (%i)\n", n - 1);
         gsl_matrix_int_free(previous_matrix);
     }
 
