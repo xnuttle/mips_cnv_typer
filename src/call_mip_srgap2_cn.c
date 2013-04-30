@@ -67,6 +67,12 @@
 // Parameter setting the minimum likelihood value for a single data point
 #define MIN_LIKELIHOOD -30
 
+static const long SRGAP2D_DEL_START=105947; //master sequence base 1 coordinate of SRGAP2D deletion region start
+static const long SRGAP2D_DEL_END=213356; //master sequence base 1 coordinate of SRGAP2D deletion region end
+static const int MIN_LIKELIHOOD_DIFF=40; //see below for detailed description of this heuristic
+static const int MIN_MIPS_IN_CN_STATE=5; //see below for detailed description of this heuristic
+static const int num_args=4; //number of required command line arguments
+
 /*
  * Given a pointer to an iniparser instance, load the paralog copy number states
  * for all paralogs into a vector.
@@ -198,42 +204,6 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
 
     return matrix;
 }
-
-//MAGIC NUMBERS
-#define SRGAP2A_MAX_CN 3
-#define SRGAP2B_MAX_CN 4
-#define SRGAP2C_MAX_CN 3
-#define SRGAP2D_MAX_CN 4
-
-//static const double SRGAP2A_FREQ_0=exp(MIN_LIKELIHOOD); //frequency of a SRGAP2A copy number genotype of 0
-#define SRGAP2A_FREQ_0 exp(MIN_LIKELIHOOD)
-static const double SRGAP2A_FREQ_1=(double)3/(double)28153; //frequency of a SRGAP2A copy number genotype of 1
-static const double SRGAP2A_FREQ_2=(double)28147/(double)28153; //frequency of a SRGAP2A copy number genotype of 2
-static const double SRGAP2A_FREQ_3=(double)3/(double)28153; //frequency of a SRGAP2A copy number genotype of 3
-
-static const double SRGAP2B_FREQ_0=(double)3/(double)661; //frequency of a SRGAP2B copy number genotype of 0
-static const double SRGAP2B_FREQ_1=(double)33/(double)661; //frequency of a SRGAP2B copy number genotype of 1
-static const double SRGAP2B_FREQ_2=(double)575/(double)661; //frequency of a SRGAP2B copy number genotype of 2
-static const double SRGAP2B_FREQ_3=(double)49/(double)661; //frequency of a SRGAP2B copy number genotype of 3
-static const double SRGAP2B_FREQ_4=(double)1/(double)661; //frequency of a SRGAP2B copy number genotype of 4
-
-#define SRGAP2C_FREQ_0 exp(MIN_LIKELIHOOD)
-//static const double SRGAP2C_FREQ_0=exp(MIN_LIKELIHOOD); //frequency of a SRGAP2C copy number genotype of 0
-static const double SRGAP2C_FREQ_1=(double)2/(double)7140; //frequency of a SRGAP2C copy number genotype of 1
-static const double SRGAP2C_FREQ_2=(double)7134/(double)7140; //frequency of a SRGAP2C copy number genotype of 2
-static const double SRGAP2C_FREQ_3=(double)4/(double)7140; //frequency of a SRGAP2C copy number genotype of 3
-
-static const double SRGAP2D_FREQ_0=(double)3/(double)47; //frequency of a SRGAP2D copy number genotype of 0
-static const double SRGAP2D_FREQ_1=(double)9/(double)47; //frequency of a SRGAP2D copy number genotype of 1
-static const double SRGAP2D_FREQ_2=(double)28/(double)47; //frequency of a SRGAP2D copy number genotype of 2
-static const double SRGAP2D_FREQ_3=(double)6/(double)47; //frequency of a SRGAP2D copy number genotype of 3
-static const double SRGAP2D_FREQ_4=(double)1/(double)47; //frequency of a SRGAP2D copy number genotype of 4
-
-static const long SRGAP2D_DEL_START=105947; //master sequence base 1 coordinate of SRGAP2D deletion region start
-static const long SRGAP2D_DEL_END=213356; //master sequence base 1 coordinate of SRGAP2D deletion region end
-static const int MIN_LIKELIHOOD_DIFF=40; //see below for detailed description of this heuristic
-static const int MIN_MIPS_IN_CN_STATE=5; //see below for detailed description of this heuristic
-static const int num_args=4; //number of required command line arguments
 
 int main(int argc,char*argv[])
 {
