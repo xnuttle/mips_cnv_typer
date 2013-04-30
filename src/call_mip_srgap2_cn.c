@@ -201,6 +201,8 @@ static const int num_args=4; //number of required command line arguments
 
 int main(int argc,char*argv[])
 {
+    long i, j;
+
     // Check to make sure there are there are enough command line arguments provided.
     if(argc<(num_args+1)) //argc includes the program call in its count
     {
@@ -217,6 +219,10 @@ int main(int argc,char*argv[])
     }
 
     int number_of_paralogs = (int)paralog_copy_numbers->size;
+    int number_of_copy_states = 1;
+    for (i = 0; i < number_of_paralogs; i++) {
+        number_of_copy_states = number_of_copy_states * gsl_vector_int_get(paralog_copy_numbers, i);
+    }
 
     // Get information about number of mip targets designed for copy number genotyping.
     FILE*miptargetsfile;
@@ -246,7 +252,7 @@ int main(int argc,char*argv[])
     long start,end;
     long target_coords[num_mip_targets];
     long specificities[num_mip_targets][number_of_paralogs];
-    long i=0,j;
+    i=0;
     spec[1]='\0';
     while(fscanf(miptargetsfile,"%s %ld %c %ld %s %c %s %s %s %s %s",dummy,&start,&miptype,&end,dummy,&miptype,dummy,dummy,spec_string,dummy,dummy)==11)
     {
