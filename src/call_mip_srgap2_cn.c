@@ -62,6 +62,7 @@
  * Define constants.
  */
 #define PARALOG_COUNTS_SECTION "paralog_copy_number_states"
+#define MAX_STRING_LENGTH 80
 
 /*
  * Given a pointer to an iniparser instance, load the paralog copy number states
@@ -95,6 +96,38 @@ gsl_vector_int* get_paralog_copy_numbers(dictionary* ini) {
     }
 
     return paralog_copy_numbers;
+}
+
+/*
+ * Given a pointer to an iniparser instance, load priors for the given paralog
+ * number.
+ */
+gsl_vector* get_paralog_priors(dictionary* ini, int paralog, int paralog_copy_states) {
+    char section[MAX_STRING_LENGTH];
+    char** paralog_keys;
+    double total;
+    int i;
+    gsl_vector* priors;
+
+    sprintf(section, "priors_paralog%i", paralog);
+    printf("Looking for section: %s\n", section);
+
+    paralog_keys = iniparser_getseckeys(ini, section);
+    if (paralog_keys == NULL) {
+        return NULL;
+    }
+
+    total = iniparser_getdouble(ini, paralog_keys[0], -1);
+    printf("Found paralog %i total: %f\n", paralog, total);
+
+    priors = gsl_vector_alloc(paralog_copy_states);
+
+    for (i = 0; i < paralog_copy_states; i++) {
+        gsl_vector_set(priors, i, iniparser_getdouble(ini, paralog_keys[i + 1], -1) / total);
+        printf("paralog%i_prior%i: %f\n", paralog, i, gsl_vector_get(priors, i));
+    }
+
+    return priors;
 }
 
 /*
@@ -221,13 +254,31 @@ int main(int argc,char*argv[])
         return -1;
     }
 
-    iniparser_freedict(ini);
-
     int number_of_paralogs = (int)paralog_copy_numbers->size;
     int number_of_copy_states = 1;
     for (i = 0; i < number_of_paralogs; i++) {
         number_of_copy_states = number_of_copy_states * gsl_vector_int_get(paralog_copy_numbers, i);
     }
+
+    // Load paralog priors.
+    gsl_vector* new_priors[number_of_paralogs];
+    for (i = 0; i < number_of_paralogs; i++) {
+        new_priors[i] = get_paralog_priors(ini, i, gsl_vector_int_get(paralog_copy_numbers, i));
+        if (new_priors[i] == NULL) {
+            fprintf(stderr, "Couldn't load priors for paralog %ld.\n", i);
+            return -1;
+        }
+    }
+
+    // Free memory allocated for paralog prior vectors.
+    for (i = 0; i < number_of_paralogs; i++) {
+        if (new_priors[i] != NULL) {
+            gsl_vector_free(new_priors[i]);
+        }
+    }
+
+    // Clean up configuration file.
+    iniparser_freedict(ini);
 
     // Get information about number of mip targets designed for copy number genotyping.
     FILE*miptargetsfile;
