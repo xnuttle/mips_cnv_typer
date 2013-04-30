@@ -273,7 +273,6 @@ int main(int argc,char*argv[])
      * ln(prior probabilities) corresponding to each copy number state assume
      * independence of paralog-specific copy number genotypes
      */
-    int A,B,C,D;
     int copy_states[number_of_copy_states][number_of_paralogs];
     // Vector of prior probabilities for each copy number state.
     double priors[number_of_copy_states];
