@@ -476,10 +476,16 @@ int main(int argc,char*argv[])
         }
 
         // Calculate likelihoods of observed counts at each MIP under each possible copy number state.
+        double sum_of_copy_states;
         for(i=0;i<num_mip_targets;i++)
         {
             for(j=0;j<number_of_copy_states;j++)
             {
+                sum_of_copy_states = 0;
+                for (k = 0; k < number_of_paralogs; k++) {
+                    sum_of_copy_states = sum_of_copy_states + (double)copy_states[j][k];
+                }
+
                 probs[number_of_paralogs]=0.0;
                 // MIP not in SRGAP2D deletion region
                 // TODO: remove this SRGAP2-specific code.
@@ -489,32 +495,33 @@ int main(int argc,char*argv[])
                     {
                         if(specificities[i][k]==1)
                         {
-                            // TODO: support multiple copy states in denominator.
-                            probs[k]=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
+                            probs[k]=(double)(copy_states[j][k]) / sum_of_copy_states;
                         }
                         else
                         {
-                            // TODO: support multiple copy states in denominator.
                             probs[k]=0.0;
-                            probs[number_of_paralogs]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]+copy_states[j][3]);
+                            probs[number_of_paralogs]+=(double)(copy_states[j][k]) / sum_of_copy_states;
                         }
                     }
                 }
                 else
                 {
+                    sum_of_copy_states = 0;
+                    for (k = 0; k < number_of_paralogs - 1; k++) {
+                        sum_of_copy_states = sum_of_copy_states + (double)copy_states[j][k];
+                    }
+
                     probs[number_of_paralogs-1]=0.0;
                     for(k=0;k<(number_of_paralogs-1);k++)
                     {
                         if(specificities[i][k]==1)
                         {
-                            // TODO: support multiple copy states in denominator.
-                            probs[k]=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
+                            probs[k]=(double)(copy_states[j][k]) / sum_of_copy_states;
                         }
                         else
                         {
-                            // TODO: support multiple copy states in denominator.
                             probs[k]=0.0;
-                            probs[number_of_paralogs]+=(double)(copy_states[j][k])/(double)(copy_states[j][0]+copy_states[j][1]+copy_states[j][2]);
+                            probs[number_of_paralogs]+=(double)(copy_states[j][k]) / sum_of_copy_states;
                         }
                     }
                 }
