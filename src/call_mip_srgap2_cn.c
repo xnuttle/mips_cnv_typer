@@ -63,6 +63,7 @@
  */
 #define PARALOG_COUNTS_SECTION "paralog_copy_number_states"
 #define MAX_STRING_LENGTH 80
+#define BUFFER_SIZE 1000
 
 // Parameter setting the minimum likelihood value for a single data point
 #define MIN_LIKELIHOOD -30
@@ -415,11 +416,17 @@ int main(int argc,char*argv[])
     char individual[31];
     long counts[number_of_paralogs+1];
     long indiv_counts[num_mip_targets][number_of_paralogs+1];
-    long coord,mip_coord;
     double probs[number_of_paralogs+1];
     double L;
     long k, p;
     double mip_likelihoods[num_mip_targets][number_of_copy_states];
+
+    char* delimiter = "\t";
+    char* token = NULL;
+    char* strtol_end;
+    char buffer[BUFFER_SIZE];
+    char* token_buffer;
+
     individual[30]='\0';
     countsfile=fopen(*(argv+2),"r");
     while(getc(countsfile)!='\n') {
@@ -427,16 +434,40 @@ int main(int argc,char*argv[])
     }
     fgetpos(countsfile,&pos);
 
-    // While there remains data to process, process.
-    // TODO: replace hardcoded paralog counts with dynamic values.
-    while(fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]))==9)
+    /*
+     * Parse rows for each sample in the counts file. Each sample is processed
+     * in one iteration of this loop.
+     */
+    while(fgets(buffer, sizeof buffer, countsfile))
     {
         fsetpos(countsfile,&pos);
         j=0;
         for(i=0;i<(num_mip_targets+num_exon_mips);i++)
         {
-            // TODO: replace hardcoded paralog counts with dynamic values.
-            fscanf(countsfile,"%s %s %ld %c %ld %ld %ld %ld %ld",individual,dummy,&mip_coord,&miptype,&(counts[0]),&(counts[1]),&(counts[2]),&(counts[3]),&(counts[4]));
+            // Parse this line from the counts file.
+            fgets(buffer, sizeof buffer, countsfile);
+
+            // First column is the sample.
+            token = strtok_r(buffer, delimiter, &token_buffer);
+            strcpy(individual, token);
+
+            // Second column is the target sequence.
+            token = strtok_r(NULL, delimiter, &token_buffer);
+            strcpy(dummy, token);
+
+            // Third column is the MIP coordinate which can be skipped here..
+            token = strtok_r(NULL, delimiter, &token_buffer);
+
+            // Fourth column is the MIP type.
+            token = strtok_r(NULL, delimiter, &token_buffer);
+            miptype = token[0];
+
+            // All remaining columns should be counts for each paralog plus an "uncertainty" bin.
+            for (k = 0; k < number_of_paralogs + 1; k++) {
+                token = strtok_r(NULL, delimiter, &token_buffer);
+                counts[k] = strtol(token, &strtol_end, 10);
+            }
+
             if(miptype!='E')
             {
                 for(k=0;k<(number_of_paralogs+1);k++)
