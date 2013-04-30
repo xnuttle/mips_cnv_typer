@@ -905,27 +905,63 @@ int main(int argc,char*argv[])
 
             if(evidence_for_1T)
             {
-                // TODO: support multiple copy states
-                fprintf(out,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%number_of_copy_states][0],copy_states[maxindex_max1%number_of_copy_states][1],copy_states[maxindex_max1%number_of_copy_states][2],copy_states[maxindex_max1%number_of_copy_states][3],first_mip_state2_1trans);
-                fprintf(out2,"Genotype (assuming 1 transition): %d%d%d%d %d%d%d%d, First MIP in State 2: %ld\n",copy_states[state1_1trans][0],copy_states[state1_1trans][1],copy_states[state1_1trans][2],copy_states[state1_1trans][3],copy_states[maxindex_max1%number_of_copy_states][0],copy_states[maxindex_max1%number_of_copy_states][1],copy_states[maxindex_max1%number_of_copy_states][2],copy_states[maxindex_max1%number_of_copy_states][3],first_mip_state2_1trans);
+                fprintf(out,"Genotype (assuming 1 transition): ");
+                fprintf(out2,"Genotype (assuming 1 transition): ");
+
+                for (i = 0; i < number_of_paralogs; i++) {
+                    fprintf(out, "%d", copy_states[state1_1trans][i]);
+                    fprintf(out2, "%d", copy_states[state1_1trans][i]);
+                }
+
+                fprintf(out, " ");
+                fprintf(out2, " ");
+
+                for (i = 0; i < number_of_paralogs; i++) {
+                    fprintf(out, "%d", copy_states[maxindex_max1 % number_of_copy_states][i]);
+                    fprintf(out2, "%d", copy_states[maxindex_max1 % number_of_copy_states][i]);
+                }
+
+                fprintf(out, ", First MIP in State 2: %ld\n\n", first_mip_state2_1trans);
+                fprintf(out2, ", First MIP in State 2: %ld\n\n", first_mip_state2_1trans);
             }
             else
             {
-                // TODO: support multiple copy states
-                fprintf(out,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%number_of_copy_states][0],copy_states[maxindex_max2%number_of_copy_states][1],copy_states[maxindex_max2%number_of_copy_states][2],copy_states[maxindex_max2%number_of_copy_states][3],first_mip_state2_2trans,last_mip_state2_2trans);
-                fprintf(out2,"Genotype (assuming 2 transitions): %d%d%d%d %d%d%d%d %d%d%d%d, First MIP in State 2: %ld, Last MIP in State 2: %ld\n",copy_states[state1_2trans][0],copy_states[state1_2trans][1],copy_states[state1_2trans][2],copy_states[state1_2trans][3],copy_states[state2_2trans][0],copy_states[state2_2trans][1],copy_states[state2_2trans][2],copy_states[state2_2trans][3],copy_states[maxindex_max2%number_of_copy_states][0],copy_states[maxindex_max2%number_of_copy_states][1],copy_states[maxindex_max2%number_of_copy_states][2],copy_states[maxindex_max2%number_of_copy_states][3],first_mip_state2_2trans,last_mip_state2_2trans);
+                fprintf(out, "Genotype (assuming 2 transitions): ");
+                fprintf(out2, "Genotype (assuming 2 transitions): ");
+
+                for (i = 0; i < number_of_paralogs; i++) {
+                    fprintf(out, "%d", copy_states[state1_2trans][i]);
+                    fprintf(out2, "%d", copy_states[state1_2trans][i]);
+                }
+
+                fprintf(out, " ");
+                fprintf(out2, " ");
+
+                for (i = 0; i < number_of_paralogs; i++) {
+                    fprintf(out, "%d", copy_states[state2_2trans][i]);
+                    fprintf(out2, "%d", copy_states[state2_2trans][i]);
+                }
+
+                fprintf(out, " ");
+                fprintf(out2, " ");
+
+                for (i = 0; i < number_of_paralogs; i++) {
+                    fprintf(out, "%d", copy_states[maxindex_max2 % number_of_copy_states][i]);
+                    fprintf(out2, "%d", copy_states[maxindex_max2 % number_of_copy_states][i]);
+                }
+
+                fprintf(out, ", First MIP in State 2: %ld, Last MIP in State 2: %ld\n\n", first_mip_state2_2trans, last_mip_state2_2trans);
+                fprintf(out2, ", First MIP in State 2: %ld, Last MIP in State 2: %ld\n\n", first_mip_state2_2trans, last_mip_state2_2trans);
             }
         }
         else
         {
             fprintf(out,"\n");
-            // TODO: support multiple copy states
-            fprintf(out3,"%s\t%d\t%d\t%d\t%d\tNO\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
-            if((copy_states[maxindex_max0][0]!=2)||copy_states[maxindex_max0][2]!=2)
-            {
-                // TODO: support multiple copy states
-                printf("\nSRGAP2A/C EVENT DETECTED IN %s!!! Genotype: %d%d%d%d\n",individual,copy_states[maxindex_max0][0],copy_states[maxindex_max0][1],copy_states[maxindex_max0][2],copy_states[maxindex_max0][3]);
+            fprintf(out3, "%s", individual);
+            for (i = 0; i < number_of_paralogs; i++) {
+                fprintf(out3, "\t%d", copy_states[maxindex_max0][i]);
             }
+            fprintf(out3, "\tNO\n");
         }
 
         // Prepare for next individual.
