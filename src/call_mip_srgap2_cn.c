@@ -64,6 +64,9 @@
 #define PARALOG_COUNTS_SECTION "paralog_copy_number_states"
 #define MAX_STRING_LENGTH 80
 
+// Parameter setting the minimum likelihood value for a single data point
+#define MIN_LIKELIHOOD -30
+
 /*
  * Given a pointer to an iniparser instance, load the paralog copy number states
  * for all paralogs into a vector.
@@ -105,7 +108,7 @@ gsl_vector_int* get_paralog_copy_numbers(dictionary* ini) {
 gsl_vector* get_paralog_priors(dictionary* ini, int paralog, int paralog_copy_states) {
     char section[MAX_STRING_LENGTH];
     char** paralog_keys;
-    double total;
+    double total, prior;
     int i;
     gsl_vector* priors;
 
@@ -123,7 +126,18 @@ gsl_vector* get_paralog_priors(dictionary* ini, int paralog, int paralog_copy_st
     priors = gsl_vector_alloc(paralog_copy_states);
 
     for (i = 0; i < paralog_copy_states; i++) {
-        gsl_vector_set(priors, i, iniparser_getdouble(ini, paralog_keys[i + 1], -1) / total);
+        prior = iniparser_getdouble(ini, paralog_keys[i + 1], -1);
+
+        // Don't let prior values equal 0 for statistical reasons.
+        if (prior == 0) {
+            prior = exp(MIN_LIKELIHOOD);
+            printf("Set prior to min likelihood.\n");
+        }
+        else {
+            prior = prior / total;
+        }
+
+        gsl_vector_set(priors, i, prior);
         printf("paralog%i_prior%i: %f\n", paralog, i, gsl_vector_get(priors, i));
     }
 
@@ -190,9 +204,6 @@ gsl_matrix_int* populate_matrix(int n, gsl_vector_int* x) {
 #define SRGAP2B_MAX_CN 4
 #define SRGAP2C_MAX_CN 3
 #define SRGAP2D_MAX_CN 4
-
-// Parameter setting the minimum likelihood value for a single data point
-#define MIN_LIKELIHOOD -30
 
 //static const double SRGAP2A_FREQ_0=exp(MIN_LIKELIHOOD); //frequency of a SRGAP2A copy number genotype of 0
 #define SRGAP2A_FREQ_0 exp(MIN_LIKELIHOOD)
