@@ -1,5 +1,5 @@
 
-PROGRAMS = detail_mip_targets mrfast_output_to_mipcounts call_mip_cn
+PROGRAMS = detail_mip_targets mrfast_output_to_mipcounts call_mip_cn get_SUN_coords
 BINARIES = $(addprefix bin/,$(PROGRAMS))
 
 MOD_GSL_DIR = /net/gs/vol3/software/modules-sw/gsl/1.15/Linux/RHEL6/x86_64
