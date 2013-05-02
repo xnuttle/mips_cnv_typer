@@ -24,6 +24,11 @@
 
 int main(int argc,char*argv[])
 {
+    if (argc == 1) {
+        printf("Usage: %s seqref.fasta seq2.fasta ... seqN.fasta alignment_base1_is_contig_base_N.bed gene_family.suns\n", argv[0]);
+        return -1;
+    }
+
 	//open all files, read in bed file, store contig names and alignment start coordinates with respect to larger contig files
 	FILE*files[argc-1];
 	int i,j;
