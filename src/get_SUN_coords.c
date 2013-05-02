@@ -17,9 +17,9 @@
 //corresponding contig sequence, and the third column is the base 1 coordinate of the SUN with respect to the "master" sequence (from the alignment output, not from the
 //"master" sequence's corresponding contig).
 
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 int main(int argc,char*argv[])
