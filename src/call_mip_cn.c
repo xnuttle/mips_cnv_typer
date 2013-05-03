@@ -245,6 +245,15 @@ int main(int argc,char*argv[])
         }
     }
 
+    /*
+     * Load internal event discovery heuristic settings. Use predefined constants as defaults.
+     */
+    int min_likelihood_diff = iniparser_getint(ini, "internal_event_discovery_heuristics:min_likelihood_diff", MIN_LIKELIHOOD_DIFF);
+    int min_mips_in_cn_state = iniparser_getint(ini, "internal_event_discovery_heuristics:min_mips_in_cn_state", MIN_MIPS_IN_CN_STATE);
+
+    printf("Min likelihood diff: %i\n", min_likelihood_diff);
+    printf("Min MIPs in CN state: %i\n", min_mips_in_cn_state);
+
     // Clean up configuration file.
     iniparser_freedict(ini);
 
@@ -615,8 +624,8 @@ int main(int argc,char*argv[])
 
         /*
          * Heuristics for predicting 1 copy number state transition
-         *  Likelihood_1_transition - Likelihood_0_transitions > 40 (MIN_LIKELIHOOD_DIFF)
-         *  At least 5 MIPs in each copy number state (MIN_MIPS_IN_CN_STATE)
+         *  Likelihood_1_transition - Likelihood_0_transitions > 40 (min_likelihood_diff)
+         *  At least 5 MIPs in each copy number state (min_mips_in_cn_state)
          *  Likelihood_2_transitions - Likelihood_1_transition <= 40
          *
          * Heuristics for predicting 2 copy number state transitions
@@ -624,7 +633,7 @@ int main(int argc,char*argv[])
          *  At least 5 MIPs in each copy number state
          *  Likelihood_2_transitions - Likelihood_1_transition > 40
          */
-        if((max_max1-max_max0)>MIN_LIKELIHOOD_DIFF)
+        if((max_max1-max_max0)>min_likelihood_diff)
         {
             // Trace back to determine number of MIPs in each state.
             // 1 transition
@@ -640,12 +649,12 @@ int main(int argc,char*argv[])
                 }
             }
             num_mips_state1=num_mip_targets-num_mips_state2;
-            if((num_mips_state1>=MIN_MIPS_IN_CN_STATE)&&(num_mips_state2>=MIN_MIPS_IN_CN_STATE))
+            if((num_mips_state1>=min_mips_in_cn_state)&&(num_mips_state2>=min_mips_in_cn_state))
             {
                 evidence_for_1T=1;
             }
         }
-        if((max_max2-max_max0)>MIN_LIKELIHOOD_DIFF)
+        if((max_max2-max_max0)>min_likelihood_diff)
         {
             // 2 transitions
             num_mips_state1=0;
@@ -675,11 +684,11 @@ int main(int argc,char*argv[])
                 }
             }
             num_mips_state1=num_mip_targets-num_mips_state2-num_mips_state3;
-            if((num_mips_state1>=MIN_MIPS_IN_CN_STATE)&&(num_mips_state2>=MIN_MIPS_IN_CN_STATE)&&(num_mips_state3>=MIN_MIPS_IN_CN_STATE))
+            if((num_mips_state1>=min_mips_in_cn_state)&&(num_mips_state2>=min_mips_in_cn_state)&&(num_mips_state3>=min_mips_in_cn_state))
             {
                 if(evidence_for_1T)
                 {
-                    if(max_max2-max_max1>MIN_LIKELIHOOD_DIFF)
+                    if(max_max2-max_max1>min_likelihood_diff)
                     {
                         evidence_for_2T=1;
                         evidence_for_1T=0;
