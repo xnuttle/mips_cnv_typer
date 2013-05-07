@@ -67,7 +67,6 @@
 
 // Parameter setting the minimum likelihood value for a single data point
 #define MIN_LIKELIHOOD -30
-#define MAX_LOD_SCORE 1000
 
 static const int MIN_LIKELIHOOD_DIFF=40; //see below for detailed description of this heuristic
 static const int MIN_MIPS_IN_CN_STATE=5; //see below for detailed description of this heuristic
@@ -640,12 +639,6 @@ int main(int argc,char*argv[])
         }
 
         double LOD_score=max_max0-max2_max0;
-
-        // Arbitrarily set a maximum LOD score.
-        if(LOD_score > MAX_LOD_SCORE)
-        {
-            LOD_score=MAX_LOD_SCORE;
-        }
 
         fprintf(out,"Individual: %s\nL0=%lf L1-L0=%lf L2-L0=%lf\n",individual,max_max0,max_max1-max_max0,max_max2-max_max0);
         fprintf(out,"Genotype (assuming no internal events): ");
