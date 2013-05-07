@@ -786,7 +786,7 @@ int main(int argc,char*argv[])
                     num_paralog_cn_changes=0;
                     total_copies_prev=0;
                     total_copies=0;
-                    for(i=0;i<4;i++)
+                    for(i = 0; i < number_of_paralogs; i++)
                     {
                         if(copy_states[k%number_of_copy_states][i]!=copy_states[j%number_of_copy_states][i])
                         {
