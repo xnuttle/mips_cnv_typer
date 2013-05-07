@@ -600,6 +600,26 @@ int main(int argc,char*argv[])
         {
             if(likelihood_graph[j].max0>max_max0)
             {
+                // Maximally likely copy number state assuming no internal events.
+                max_max0=likelihood_graph[j].max0;
+                maxindex_max0 = j % number_of_copy_states;
+            }
+            if(likelihood_graph[j].max1>max_max1)
+            {
+                max_max1=likelihood_graph[j].max1;
+                maxindex_max1=j;
+            }
+            if(likelihood_graph[j].max2>max_max2)
+            {
+                max_max2=likelihood_graph[j].max2;
+                maxindex_max2=j;
+            }
+        }
+
+        // Set the second-highest likelihood value.
+        for(j=(number_of_copy_states*num_mip_targets-number_of_copy_states);j<(number_of_copy_states*num_mip_targets);j++)
+        {
+            if ((likelihood_graph[j].max0 > max2_max0) && (likelihood_graph[j].max0 < max_max0)) {
                 // Calculate the sum of copy state values for all paralogs.
                 current_copy_states_sum = 0;
                 max_copy_states_sum = 0;
@@ -617,24 +637,10 @@ int main(int argc,char*argv[])
                 for (p = 0; p < number_of_paralogs; p++) {
                     if (((double)(copy_states[j % number_of_copy_states][p]) / current_copy_states_sum) !=
                         ((double)(copy_states[maxindex_max0 % number_of_copy_states][p]) / max_copy_states_sum)) {
-                        max2_max0=max_max0;
+                        max2_max0 = likelihood_graph[j].max0;
                         break;
                     }
                 }
-
-                // Maximally likely copy number state assuming no internal events.
-                max_max0=likelihood_graph[j].max0;
-                maxindex_max0 = j % number_of_copy_states;
-            }
-            if(likelihood_graph[j].max1>max_max1)
-            {
-                max_max1=likelihood_graph[j].max1;
-                maxindex_max1=j;
-            }
-            if(likelihood_graph[j].max2>max_max2)
-            {
-                max_max2=likelihood_graph[j].max2;
-                maxindex_max2=j;
             }
         }
 
