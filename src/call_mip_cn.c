@@ -774,6 +774,7 @@ int main(int argc,char*argv[])
                 likelihood_graph[j].prev_node_1trans=NULL;
                 likelihood_graph[j].prev_node_2trans=NULL;
             }
+
             // Setup all other verticies.
             for(j=number_of_copy_states;j<(number_of_copy_states*num_mip_targets);j++)
             {
@@ -900,6 +901,7 @@ int main(int argc,char*argv[])
                 {
                     current=current->prev_node_1trans;
                 }
+
                 if((current->state)!=oldstate)
                 {
                     if(trans_made==0)
