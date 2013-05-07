@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="no-js">
+<head>
+    <meta charset="utf-8" />
+    <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><![endif]-->
+    <title>MIPs/SUNK genotyping</title>
+    <script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script>
+    <meta name="generator" content="DokuWiki"/>
+<meta name="robots" content="index,follow"/>
+<meta name="date" content="2013-05-03T13:54:11-0700"/>
+<meta name="keywords" content="software,mips_sunk_genotyper"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/help/wiki/lib/exe/opensearch.php" title="Eichler Lab Wiki"/>
+<script type="text/javascript">/*<![CDATA[*/var NS='software';var SIG=' --- //[[jlhudd@uw.edu|John Huddleston]] 2013/05/06 14:36//';var JSINFO = {"id":"software:mips_sunk_genotyper","namespace":"software"};
+/*!]]>*/</script>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    </head>
+
+<body>
+    <!--[if lte IE 7 ]><div id="IE7"><![endif]--><!--[if IE 8 ]><div id="IE8"><![endif]-->
+    <div id="dokuwiki__site"><div id="dokuwiki__top"
+        class="dokuwiki site mode_show  ">
+<!-- ********** HEADER ********** -->
+        <div class="wrapper group">
+
+
+            <!-- ********** CONTENT ********** -->
+            <div id="dokuwiki__content"><div class="pad group">
+
+                <div class="page group">
+                                                            <!-- wikipage start -->
+<h1 class="sectionedit1" id="mips_sunk_genotyping">MIPs/SUNK genotyping</h1>
+
+                    <!-- TOC START -->
+<div id="dw__toc">
+<h3 class="toggle">Table of Contents</h3>
+<div>
+
+<ul class="toc">
+<li class="level1"><div class="li"><a href="#mips_sunk_genotyping">MIPs/SUNK genotyping</a></div>
+<ul class="toc">
+<li class="level2"><div class="li"><a href="#get_the_code">Get the code</a></div></li>
+<li class="level2"><div class="li"><a href="#prepare_and_sequence_mips">Prepare and sequence MIPs</a></div></li>
+<li class="level2"><div class="li"><a href="#map_mip_sequences">Map MIP sequences</a></div></li>
+<li class="level2"><div class="li"><a href="#genotype_mips">Genotype MIPs</a></div></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<!-- TOC END -->
+
+<h2 class="sectionedit2" id="get_the_code">Get the code</h2>
+<div class="level2">
+
+<p>
+Download the code.
+</p>
+<pre class="code bash"><span class="kw2">wget <a href="https://www.dropbox.com/s/3bflq9d1ng8m9k6/mips_cnv_typer.tar.gz">https://www.dropbox.com/s/3bflq9d1ng8m9k6/mips_cnv_typer.tar.gz</a></span>
+tar zxvf mips_cnv_typer.tar.gz
+<span class="kw3">cd</span> mips_cnv_typer</pre>
+
+<p>
+Build the source code after loading required modules including GNU Scientific Library (v. 1.15) and GCC (v. 4.7.0).
+</p>
+<pre class="code bash">. config.sh
+<span class="kw2">make</span></pre>
+
+</div>
+
+<h2 class="sectionedit3" id="prepare_and_sequence_mips">Prepare and sequence MIPs</h2>
+<div class="level2">
+
+<p>
+The next steps happen outside of this code base and include:
+</p>
+<ol>
+<li class="level1"><div class="li"> Create a multiple alignment of all paralogous gene sequences in the family</div>
+</li>
+<li class="level1"><div class="li"> Identify MIP targets from the alignment where each paralog shares unvariant sequence for MIP arms</div>
+</li>
+<li class="level1"><div class="li"> Identify SUNs for the paralogous gene sequences</div>
+</li>
+<li class="level1"><div class="li"> Design MIPs for all possible MIP targets</div>
+</li>
+<li class="level1"><div class="li"> Filter MIPs by quality (and existence)</div>
+</li>
+</ol>
+
+<p>
+Generate the MIP information file.
+</p>
+<pre class="code bash">.<span class="sy0">/</span>detail_mip_targets mip.armlocs \
+    <span class="br0">&#40;</span>int<span class="br0">&#41;</span>number_of_gene_families \
+    <span class="br0">&#40;</span>int<span class="br0">&#41;</span>number_of_contigs_in_1st_gene_family \
+    <span class="sy0">&lt;</span><span class="br0">&#40;</span>int<span class="br0">&#41;</span>number_of_contigs_in_Nth_gene_family<span class="sy0">&gt;</span> \
+    master_sequence_for_1st_family.fasta\
+    <span class="sy0">&lt;</span>master_sequence_for_Nth_family.fasta<span class="sy0">&gt;</span>\
+    1st_family_1st_contig.fasta \
+    1st_family_2nd_contig.fasta \
+    <span class="sy0">&lt;</span>1st_family_Nth_contig.fasta<span class="sy0">&gt;</span> \
+    1st_family.suns.fixed 1st_family_exons.bed \
+    <span class="sy0">&lt;</span>Nth_family_first_contig.fasta<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>Nth_family_Nth_contig.fasta<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>Nth_family.suns.fixed<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>Nth_family_exons.bed<span class="sy0">&gt;</span> \
+    output_file_base_name</pre>
+
+<p>
+The first five lines of the resulting tab-delimited file for look like this for SRGAP2:
+</p>
+<pre class="code">SRGAP2_1q32     4410,4561       1q32.1_final:123395;q21_contig_new_oct_2011:144772;p12_contig_new_oct_2011:275067;SRGAP2D_contig:59457; S       132,    132,132,        1010    -       21
+SRGAP2_1q32     4893,5044       1q32.1_final:123878;q21_contig_new_oct_2011:145255;p12_contig_new_oct_2011:275550;SRGAP2D_contig:59940; S       34,41,103,      41,103, 1010    -       22
+SRGAP2_1q32     6496,6647       1q32.1_final:125481;q21_contig_new_oct_2011:146862;p12_contig_new_oct_2011:277157;SRGAP2D_contig:61547; S       72,76,121,      72,76,  1010    -       22
+SRGAP2_1q32     10161,10312     1q32.1_final:129146;q21_contig_new_oct_2011:150523;p12_contig_new_oct_2011:280818;SRGAP2D_contig:65208; S       24,106, 24,106, 1010    +       17
+SRGAP2_1q32     18372,18523     1q32.1_final:137357;q21_contig_new_oct_2011:158715;p12_contig_new_oct_2011:289005;SRGAP2D_contig:73412; S       29,105, 29,     0010    -       22</pre>
+
+<p>
+Outside of this code base again, perform the following steps.
+</p>
+<ol>
+<li class="level1"><div class="li"> Order MIPs</div>
+</li>
+<li class="level1"><div class="li"> Run MIP protocol</div>
+</li>
+<li class="level1"><div class="li"> Convert MIP sequences to compressed FASTQs with barcodes for each sample</div>
+</li>
+</ol>
+
+</div>
+
+<h2 class="sectionedit4" id="map_mip_sequences">Map MIP sequences</h2>
+<div class="level2">
+
+<p>
+Map the MIPs reads with mrfast paired-end mapping. The following command assumes that MIPs reads are interleaved with the first read of a pair followed by second in a single compressed FASTQ file. It can be modified to accept input from two files with the <code>–seq1</code> and <code>–seq2</code> flags. The output of this command is a compressed SAM file which will be used in the next step of the pipeline.
+</p>
+<pre class="code bash">mrfast <span class="re5">--index</span> reference.fasta
+mrfast <span class="re5">--search</span> reference.fasta <span class="re5">--pe</span> <span class="re5">--max</span> <span class="nu0">160</span> <span class="re5">--min</span> <span class="nu0">144</span> <span class="re5">-e</span> <span class="nu0">4</span> \
+    <span class="re5">--discordant-vh</span> <span class="re5">--seqcomp</span> <span class="re5">--outcomp</span> <span class="re5">--maxoea</span> <span class="nu0">500</span> \
+    <span class="re5">--seq</span> MIPs_sequences.fastq.gz <span class="re5">-o</span> MIPs_alignments</pre>
+
+<p>
+Count reads per MIP per sample using mrfast output. This command creates a file called <code>&lt;output_prefix&gt;.mipcounts</code>. The barcode key file is a tab-delimited file with sample name in the first column and the barcode sequence in the second column. The mrFAST mapping paths file should contain the absolute path to each compressed SAM file generated by mrFAST for the given MIPs targets.
+</p>
+<pre class="code bash">.<span class="sy0">/</span>mrfast_output_to_mipcounts \
+    <span class="sy0">&lt;</span>miptargets_file<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>individual_barcode_key_file<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>text_file_with_absolute_paths_to_mapping_output_files<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>output_prefix<span class="sy0">&gt;</span> <span class="sy0">&gt;</span> problematic_reads.txt</pre>
+
+<p>
+The first five lines of the resulting MIP counts file for SRGAP2 looks like this:
+</p>
+<pre class="code">Individual      Target_Sequence Target_Coordinate       Mip_Type        Paralog_1_Count Paralog_2_Count Paralog_3_Count Paralog_4_Count Nonspecific_Count
+NA18633_100     SRGAP2_1q32     4485    S       148     0       118     0       280
+NA18633_100     SRGAP2_1q32     4968    S       112     0       90      0       224
+NA18633_100     SRGAP2_1q32     6571    S       162     0       139     0       240
+NA18633_100     SRGAP2_1q32     10236   S       160     0       188     0       333</pre>
+
+</div>
+
+<h2 class="sectionedit5" id="genotype_mips">Genotype MIPs</h2>
+<div class="level2">
+
+<p>
+Define gene-specific parameters for the genotyper in a configuration file. The configuration file is parsed by the <a href="http://ndevilla.free.fr/iniparser/" class="urlextern" title="http://ndevilla.free.fr/iniparser/"  rel="nofollow">iniParser library</a> which processes standard <a href="http://en.wikipedia.org/wiki/INI_file" class="urlextern" title="http://en.wikipedia.org/wiki/INI_file"  rel="nofollow">Windows-style INI files</a>. The following parameters must be defined in the configuration file:
+</p>
+<ol>
+<li class="level1"><div class="li"> Total number of copy number states per paralog including 0</div>
+<ol>
+<li class="level2"><div class="li"> Create a section named “paralog_copy_number_states”</div>
+</li>
+<li class="level2"><div class="li"> For the ith paralog starting at 0, define a key “paralog&lt;i&gt;” where the value is the total number of copy number states possible including 0</div>
+</li>
+</ol>
+</li>
+<li class="level1"><div class="li"> Population frequencies per paralog for each copy number state</div>
+<ol>
+<li class="level2"><div class="li"> Create a section for the ith paralog starting at 0 named “priors_paralog&lt;i&gt;”</div>
+<ol>
+<li class="level3"><div class="li"> Set a key “total” where the value is the total number of samples previously genotyped</div>
+</li>
+<li class="level3"><div class="li"> For the jth copy state starting at 0 set a key “count&lt;j&gt;” where the value is the number of samples with that copy number</div>
+</li>
+<li class="level3"><div class="li"> <strong>Note</strong>: Copy states with zero samples will be assigned a prior probability of exp(-30) by the genotyper instead of the count at that copy state divided by the total samples.</div>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+
+<p>
+The first two sections of the configuration file for SRGAP2 look like this:
+</p>
+<pre class="code ini"><span class="re0"><span class="br0">&#91;</span>paralog_copy_number_states<span class="br0">&#93;</span></span>
+<span class="re1">paralog0</span> <span class="sy0">=</span><span class="re2"> 4</span>
+<span class="re1">paralog1</span> <span class="sy0">=</span><span class="re2"> 5</span>
+<span class="re1">paralog2</span> <span class="sy0">=</span><span class="re2"> 4</span>
+<span class="re1">paralog3</span> <span class="sy0">=</span><span class="re2"> 5</span>
+&nbsp;
+<span class="re0"><span class="br0">&#91;</span>priors_paralog0<span class="br0">&#93;</span></span>
+<span class="re1">total</span> <span class="sy0">=</span><span class="re2"> 28153</span>
+<span class="re1">count0</span> <span class="sy0">=</span><span class="re2"> 0</span>
+<span class="re1">count1</span> <span class="sy0">=</span><span class="re2"> 3</span>
+<span class="re1">count2</span> <span class="sy0">=</span><span class="re2"> 28147</span>
+<span class="re1">count3</span> <span class="sy0">=</span><span class="re2"> 3</span></pre>
+
+<p>
+The following parameters may optionally be defined to override default values.
+</p>
+<ol>
+<li class="level1"><div class="li"> Internal event discovery heuristics</div>
+<ol>
+<li class="level2"><div class="li"> Minimum difference between likelihood values (default: 40)</div>
+</li>
+<li class="level2"><div class="li"> Minimum MIPs in a given copy number state (default: 5)</div>
+</li>
+</ol>
+</li>
+</ol>
+
+<p>
+To define any of the above parameters in the configuration file, you could add the following sections.
+</p>
+<pre class="code ini"><span class="re0"><span class="br0">&#91;</span>internal_event_discovery_heuristics<span class="br0">&#93;</span></span>
+<span class="re1">min_likelihood_diff</span> <span class="sy0">=</span><span class="re2"> 40</span>
+<span class="re1">min_mips_in_cn_state</span> <span class="sy0">=</span><span class="re2"> 5</span></pre>
+
+<p>
+Generate paralog-specific copy number calls from MIP paralog-specific read count data. This command will create the following three files:
+</p>
+<ul>
+<li class="level1"><div class="li"> <code>&lt;output_prefix&gt;.cncalls</code>: list of genotypes per sample with likelihood values, genotype without transitions, and most likely genotype with transitions for samples with possible complex genotypes</div>
+</li>
+<li class="level1"><div class="li"> <code>&lt;output_prefix&gt;.compevents</code>: tab-delimited list of samples with possible complex genotypes. Columns include sample name, likelihood scores for 0, 1, and 2 transitions, the genotype assuming no transitions, and the most likely genotype assuming one or two transitions</div>
+</li>
+<li class="level1"><div class="li"> <code>&lt;output_prefix&gt;.simplecalls</code>: tab-delimited copy-number states per sample for each paralog and a boolean value in the last column indicating whether the genotyper discovered a possible complex genotype</div>
+</li>
+</ul>
+<pre class="code bash">.<span class="sy0">/</span>call_mip_cn \
+    <span class="sy0">&lt;</span>miptargets_file<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>mip_read_counts_file<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>output_prefix<span class="sy0">&gt;</span> \
+    <span class="sy0">&lt;</span>configuration_file<span class="sy0">&gt;</span></pre>
+
+<p>
+The first five lines of the tab-delimited <code>.simplecalls</code> file for SRGAP2 look like this:
+</p>
+<pre class="code">Individual      Paralog0_CN     Paralog1_CN     Paralog2_CN     Paralog3_CN     Possible_Complex_CN_Genotype
+NA18633_100     2       2       2       2       NO
+HG00327_100     2       2       2       2       YES
+SG9906627_100   1       2       2       2       YES
+NA20334_100     2       0       2       3       NO
+NA18989_100     2       3       2       1       YES</pre>
+
+</div>
+                    <!-- wikipage stop -->
+                                    </div>
+
+                            </div></div><!-- /content -->
+
+        </div><!-- /wrapper -->
+
+
+<!-- ********** FOOTER ********** -->
+
+    </div></div><!-- /site -->
+
+    <div class="no"><img src="/help/wiki/lib/exe/indexer.php?id=software%3Amips_sunk_genotyper&amp;1367876203" width="2" height="1" alt="" /></div>
+    <div id="screen__mode" class="no"></div>    <!--[if ( lte IE 7 | IE 8 ) ]></div><![endif]-->
+</body>
+</html>
