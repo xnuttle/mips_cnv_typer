@@ -67,6 +67,7 @@
 
 // Parameter setting the minimum likelihood value for a single data point
 #define MIN_LIKELIHOOD -30
+#define MAX_LOD_SCORE 1000
 
 static const int MIN_LIKELIHOOD_DIFF=40; //see below for detailed description of this heuristic
 static const int MIN_MIPS_IN_CN_STATE=5; //see below for detailed description of this heuristic
@@ -406,7 +407,7 @@ int main(int argc,char*argv[])
     for (i = 0; i < number_of_paralogs; i++) {
         fprintf(out3, "\tParalog%ld_CN", i);
     }
-    fprintf(out3, "\tPossible_Complex_CN_Genotype\n");
+    fprintf(out3, "\tPossible_Complex_CN_Genotype\tLOD_Score\n");
 
     // For each individual, read in counts, calculate and store individual likelihoods of data for each MIP under each copy number state.
     FILE*countsfile;
@@ -521,8 +522,9 @@ int main(int argc,char*argv[])
          * Use dynamic programming to determine whether the data support more
          * than 1 copy number state across the gene family.
          */
-        double max_max0=-DBL_MAX,max_max1=-DBL_MAX,max_max2=-DBL_MAX;
+        double max_max0=-DBL_MAX,max_max1=-DBL_MAX,max_max2=-DBL_MAX,max2_max0=-DBL_MAX;
         long maxindex_max0,maxindex_max1,maxindex_max2;
+        double current_copy_states_sum, max_copy_states_sum;
 
         // Setup first column and calculate maximum likelihood value and index of corresponding node.
         for(j=0;j<number_of_copy_states;j++)
@@ -587,16 +589,43 @@ int main(int argc,char*argv[])
          * transitions and use to determine whether there may be multiple
          * underlying copy number states across the gene family.
          */
+        // For maximum of 2 transitions.
         max_max0=-DBL_MAX;
         max_max1=-DBL_MAX;
         max_max2=-DBL_MAX;
+
+        // For LOD score calculation LOD=max_max0-max2_max0.
+        max2_max0=-DBL_MAX;
+
         for(j=(number_of_copy_states*num_mip_targets-number_of_copy_states);j<(number_of_copy_states*num_mip_targets);j++)
         {
             if(likelihood_graph[j].max0>max_max0)
             {
-                max_max0=likelihood_graph[j].max0;
+                // Calculate the sum of copy state values for all paralogs.
+                current_copy_states_sum = 0;
+                max_copy_states_sum = 0;
+                for (p = 0; p < number_of_paralogs; p++) {
+                    current_copy_states_sum = current_copy_states_sum + copy_states[j % number_of_copy_states][p];
+                    max_copy_states_sum = max_copy_states_sum + copy_states[maxindex_max0 % number_of_copy_states][p];
+                }
+
+               /*
+                * Only update value of 2nd highest likelihood if the associated
+                * copy number state has a distinct set of expected
+                * paralog-specific count frequencies from state having maximum
+                * likelihood.
+                */
+                for (p = 0; p < number_of_paralogs; p++) {
+                    if (((double)(copy_states[j % number_of_copy_states][p]) / current_copy_states_sum) !=
+                        ((double)(copy_states[maxindex_max0 % number_of_copy_states][p]) / max_copy_states_sum)) {
+                        max2_max0=max_max0;
+                        break;
+                    }
+                }
+
                 // Maximally likely copy number state assuming no internal events.
-                maxindex_max0=j%number_of_copy_states;
+                max_max0=likelihood_graph[j].max0;
+                maxindex_max0 = j % number_of_copy_states;
             }
             if(likelihood_graph[j].max1>max_max1)
             {
@@ -609,6 +638,15 @@ int main(int argc,char*argv[])
                 maxindex_max2=j;
             }
         }
+
+        double LOD_score=max_max0-max2_max0;
+
+        // Arbitrarily set a maximum LOD score.
+        if(LOD_score > MAX_LOD_SCORE)
+        {
+            LOD_score=MAX_LOD_SCORE;
+        }
+
         fprintf(out,"Individual: %s\nL0=%lf L1-L0=%lf L2-L0=%lf\n",individual,max_max0,max_max1-max_max0,max_max2-max_max0);
         fprintf(out,"Genotype (assuming no internal events): ");
         for (i = 0; i < number_of_paralogs; i++) {
@@ -724,7 +762,7 @@ int main(int argc,char*argv[])
                 fprintf(out3, "\t%d", copy_states[maxindex_max0][i]);
             }
             fprintf(out2, "\t");
-            fprintf(out3, "\tYES\n");
+            fprintf(out3, "\tYES\t%lf\n", LOD_score);
 
             // Setup first column and calculate maximum likelihood value and index of corresponding node.
             for(j=0;j<number_of_copy_states;j++)
@@ -938,7 +976,7 @@ int main(int argc,char*argv[])
             for (i = 0; i < number_of_paralogs; i++) {
                 fprintf(out3, "\t%d", copy_states[maxindex_max0][i]);
             }
-            fprintf(out3, "\tNO\n");
+            fprintf(out3, "\tNO\t%lf\n", LOD_score);
         }
 
         // Prepare for next individual.
