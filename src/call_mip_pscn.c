@@ -347,12 +347,19 @@ void get_path_maxes(struct node*lgraph,long nmips,long nstates,double*m0,double*
 	{
 		if(lgraph[i].max_0t>*m0)
 		{
-			if(diff_support(lgraph,i,*im0,nstates))
+			if(diff_support(lgraph,i,*im0,nstates)) //ensure data support for the two most likely copy number states assessed so far differs (otherwise difference in their likelihoods is due to priors alone)
 			{
 				*nm0=*m0;
 			}
 			*m0=lgraph[i].max_0t;
 			*im0=i;
+		}
+		else if(lgraph[i].max_0t>*nm0)
+		{
+			if(diff_support(lgraph,i,*im0,nstates))
+			{
+				*nm0=lgraph[i].max_0t;
+			}
 		}
 		if(lgraph[i].max_1t>*m1)
 		{
